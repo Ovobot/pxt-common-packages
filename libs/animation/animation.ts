@@ -26,6 +26,14 @@ namespace animation {
         }
     }
 
+    //% fixedInstances blockId=animation_editor block="frames %frames"
+    export class AnimateFrame {
+        public images:Image[];
+        constructor(public frames: Image[]) {
+            this.images = frames;
+        }
+    }
+
     export class Path {
         protected nodes: PathNode[];
         protected lastNode: number; // The index of the last node to fire
@@ -508,6 +516,7 @@ namespace animation {
     //% block="animate $sprite=variables_get(mySprite) frames $frames=animation_editor interval (ms) $frameInterval=timePicker loop $loop=toggleOnOff"
     //% group="Animate"
     //% help=animation/run-image-animation
+    //% deprecated=1
     export function runImageAnimation(sprite: Sprite, frames: Image[], frameInterval?: number, loop?: boolean) {
         const anim = new ImageAnimation(sprite, frames, frameInterval || 500, !!loop);
         anim.init();
@@ -614,6 +623,19 @@ namespace animation {
     //% fixedInstance whenUsed block="bobbing (left)"
     export const bobbingLeft = new PathPreset("c -5 -20 -15 20 -20 0");
 
+    //% fixedInstance frames blockIdentity=animation._animationDefaultFrames
+    export const duckframe = new AnimateFrame([]);
+
+    //% fixedInstance frames blockIdentity=animation._animationDefaultFrames
+    export const duck2frame = new AnimateFrame([]);
+
+
+    // // fixedInstance frames blockIdentity=animation._animationDefaultFrames
+    // export const pigframes = [dog.frame_1,dog.frame_2,dog.frame_3];
+
+    //'&#91;img&#96;&#10;        . . . . . . 9 9 9 9 . . . . . .&#10;        . . . . 2 2 3 3 3 3 2 e . . . .&#10;        . . . 2 3 d 1 1 d d 3 2 e . . .&#10;        . . 2 3 1 d 3 3 3 d d 3 e . . .&#10;        . 2 3 1 3 3 3 3 3 d 1 3 b e . .&#10;        . 2 1 d 3 3 3 3 d 3 3 1 3 b b .&#10;        2 3 1 d 3 3 1 1 3 3 3 1 3 4 b b&#10;        2 d 3 3 d 1 3 1 3 3 3 1 3 4 4 b&#10;        2 d 3 3 3 1 3 1 3 3 3 1 b 4 4 e&#10;        2 d 3 3 3 1 1 3 3 3 3 1 b 4 4 e&#10;        e d 3 3 3 3 d 3 3 3 d d b 4 4 e&#10;        e d d 3 3 3 d 3 3 3 1 3 b 4 b e&#10;        e 3 d 3 3 1 d d 3 d 1 b b e e .&#10;        . e 3 1 1 d d 1 1 1 b b e e e .&#10;        . . e 3 3 3 3 3 3 b e e e e . .&#10;        . . . e e e e e e e e e e . . .&#10;    &#96;&#44;img&#96;&#10;        . . . . . 3 3 b 3 3 d d 3 3 . .&#10;        . . . . 3 1 1 d 3 d 1 1 1 1 3 .&#10;        . . . 3 d 1 1 1 d 1 1 1 d 3 1 3&#10;        . . 3 d d 1 1 1 d d 1 1 1 3 3 3&#10;        . 3 1 1 d 1 1 1 1 d d 1 1 b . .&#10;        . 3 1 1 1 d 1 1 1 1 1 d 1 1 3 .&#10;        . b d 1 1 1 d 1 1 1 1 1 1 1 3 .&#10;        . 4 b 1 1 1 1 d d 1 1 1 1 d 3 .&#10;        . 4 4 d 1 1 1 1 1 1 d d d b b .&#10;        . 4 d b d 1 1 1 1 1 1 1 1 3 . .&#10;        4 d d 5 b d 1 1 1 1 1 1 1 3 . .&#10;        4 5 d 5 5 b b d 1 1 1 1 d 3 . .&#10;        4 5 5 d 5 5 d b b b d d 3 . . .&#10;        4 5 5 5 d d d d 4 4 b 3 . . . .&#10;        . 4 5 5 5 4 4 4 . . . . . . . .&#10;        . . 4 4 4 . . . . . . . . . . .&#10;    &#96;&#44;img&#96;&#10;        . . . . . . . . . . b 5 b . . .&#10;        . . . . . . . . . b 5 b . . . .&#10;        . . . . . . . . . b c . . . . .&#10;        . . . . . . b b b b b b . . . .&#10;        . . . . . b b 5 5 5 5 5 b . . .&#10;        . . . . b b 5 d 1 f 5 5 d f . .&#10;        . . . . b 5 5 1 f f 5 d 4 c . .&#10;        . . . . b 5 5 d f b d d 4 4 . .&#10;        b d d d b b d 5 5 5 4 4 4 4 4 b&#10;        b b d 5 5 5 b 5 5 4 4 4 4 4 b .&#10;        b d c 5 5 5 5 d 5 5 5 5 5 b . .&#10;        c d d c d 5 5 b 5 5 5 5 5 5 b .&#10;        c b d d c c b 5 5 5 5 5 5 5 b .&#10;        . c d d d d d d 5 5 5 5 5 d b .&#10;        . . c b d d d d d 5 5 5 b b . .&#10;        . . . c c c c c c c c b b . . .&#10;    &#96;&#44;img&#96;&#10;        . . . . . . . . . . b 5 b . . .&#10;        . . . . . . . . . b 5 b . . . .&#10;        . . . . . . b b b b b b . . . .&#10;        . . . . . b b 5 5 5 5 5 b . . .&#10;        . . . . b b 5 d 1 f 5 d 4 c . .&#10;        . . . . b 5 5 1 f f d d 4 4 4 b&#10;        . . . . b 5 5 d f b 4 4 4 4 b .&#10;        . . . b d 5 5 5 5 4 4 4 4 b . .&#10;        . . b d d 5 5 5 5 5 5 5 5 b . .&#10;        . b d d d d 5 5 5 5 5 5 5 5 b .&#10;        b d d d b b b 5 5 5 5 5 5 5 b .&#10;        c d d b 5 5 d c 5 5 5 5 5 5 b .&#10;        c b b d 5 d c d 5 5 5 5 5 5 b .&#10;        . b 5 5 b c d d 5 5 5 5 5 d b .&#10;        b b c c c d d d d 5 5 5 b b . .&#10;        . . . c c c c c c c c b b . . .&#10;    &#96;&#93;';
+    
+
     /**
      * Generates a path string for preset animation
      * @param animationPath The preset path
@@ -627,13 +649,25 @@ namespace animation {
     }
 
 
+    // //% blockId=animation_editor block="%frames"
+    // //% shim=TD_ID
+    // //% frames.fieldEditor="animation"
+    // //% frames.fieldOptions.decompileLiterals="true"
+    // //% frames.fieldOptions.filter="!tile !dialog !background"
+    // //% group="Animate" duplicateShadowOnDrag
+    // export function _animationFrames(frames: Image[]) {
+    //     return frames
+    // }
+
+    //frames: animation.AnimateFrame
+
     //% blockId=animation_editor block="%frames"
     //% shim=TD_ID
     //% frames.fieldEditor="animation"
     //% frames.fieldOptions.decompileLiterals="true"
     //% frames.fieldOptions.filter="!tile !dialog !background"
     //% group="Animate" duplicateShadowOnDrag
-    export function _animationFrames(frames: Image[]) {
-        return frames
+    export function _animationDefaultFrames(frames: animation.AnimateFrame) {
+        return frames.images;
     }
 }

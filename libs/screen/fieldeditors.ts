@@ -59,6 +59,7 @@ namespace images {
     //% tile.fieldOptions.decompileIndirectFixedInstances="true"
     //% weight=10 blockNamespace="scene" group="Tiles"
     //% blockHidden=1 duplicateShadowOnDrag
+    //% deprecated=1
     export function _tile(tile: Image) {
         return tile
     }

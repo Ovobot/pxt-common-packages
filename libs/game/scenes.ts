@@ -112,6 +112,7 @@ namespace scene {
     //% duration.shadow=timePicker duration.defl=500
     //% group="Camera"
     //% help=scene/camera-shake
+    //% deprecated=1
     export function cameraShake(amplitude: number = 4, duration: number = 500) {
         const scene = game.currentScene();
         scene.camera.shake(amplitude, duration);
@@ -124,6 +125,7 @@ namespace scene {
     //% blockId=camerafollow block="camera follow sprite %sprite=variables_get(mySprite)"
     //% group="Camera"
     //% help=scene/camera-follow-sprite
+    //% deprecated=1
     export function cameraFollowSprite(sprite: Sprite) {
         const scene = game.currentScene();
         scene.camera.sprite = sprite;
@@ -136,6 +138,7 @@ namespace scene {
     //% blockId=camerapos block="center camera at x %x y %y"
     //% group="Camera"
     //% help=scene/center-camera-at
+    //% deprecated=1
     export function centerCameraAt(x: number, y: number) {
         const scene = game.currentScene();
         scene.camera.sprite = undefined;
@@ -149,6 +152,7 @@ namespace scene {
     //% blockId=cameraleft block="camera left"
     //% group="Camera"
     //% help=scene/camera-left
+    //% deprecated=1
     export function cameraLeft() {
         const scene = game.currentScene();
         return scene.camera.drawOffsetX;
@@ -160,6 +164,7 @@ namespace scene {
     //% blockId=cameratop block="camera top"
     //% group="Camera"
     //% help=scene/camera-top
+    //% deprecated=1
     export function cameraTop() {
         const scene = game.currentScene();
         return scene.camera.drawOffsetY;

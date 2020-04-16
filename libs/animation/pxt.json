@@ -5,7 +5,10 @@
         "README.md",
         "animation.ts",
         "legacy.ts",
-        "targetoverrides.ts"
+        "targetoverrides.ts",
+        "dog.jres",
+        "dog.ts",
+        "frames.ani"
     ],
     "testFiles": [
         "test.ts"

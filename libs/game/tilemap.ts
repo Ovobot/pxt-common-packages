@@ -420,6 +420,7 @@ namespace tiles {
     //% tilemap.fieldOptions.filter="tile"
     //% blockNamespace="scene" group="Tiles" duplicateShadowOnDrag
     //% help=tiles/set-tile-map
+    //% deprecated=1
     export function setTilemap(tilemap: TileMapData) {
         scene.setTileMapLevel(tilemap);
     }
@@ -434,6 +435,7 @@ namespace tiles {
     //% tile.decompileIndirectFixedInstances=true
     //% blockNamespace="scene" group="Tiles" blockGap=8
     //% help=tiles/set-tile-at
+    //% deprecated=1
     export function setTileAt(loc: Location, tile: Image): void {
         const scene = game.currentScene();
         if (!loc || !tile || !scene.tileMap) return null;
@@ -451,6 +453,7 @@ namespace tiles {
     //% on.shadow=toggleOnOff loc.shadow=mapgettile
     //% blockNamespace="scene" group="Tiles" blockGap=8
     //% help=tiles/set-wall-at
+    //% deprecated=1
     export function setWallAt(loc: Location, on: boolean): void {
         const scene = game.currentScene();
         if (!loc || !scene.tileMap) return null;
@@ -467,6 +470,7 @@ namespace tiles {
     //% blockNamespace="scene" group="Tiles"
     //% weight=25 blockGap=8
     //% help=tiles/get-tile-location
+    //% deprecated=1
     export function getTileLocation(col: number, row: number): Location {
         const scene = game.currentScene();
         if (col == undefined || row == undefined || !scene.tileMap) return null;
@@ -502,6 +506,7 @@ namespace tiles {
     //% loc.shadow=mapgettile
     //% blockNamespace="scene" group="Tiles" blockGap=8
     //% help=tiles/place
+    //% deprecated=1
     export function placeOnTile(sprite: Sprite, loc: Location): void {
         if (!sprite || !loc || !game.currentScene().tileMap) return;
         loc.place(sprite);
@@ -517,6 +522,7 @@ namespace tiles {
     //% tile.decompileIndirectFixedInstances=true
     //% blockNamespace="scene" group="Tiles" blockGap=8
     //% help=tiles/place-on-random-tile
+    //% deprecated=1
     export function placeOnRandomTile(sprite: Sprite, tile: Image): void {
         if (!sprite || !game.currentScene().tileMap) return;
         const tiles = getTilesByType(tile);
@@ -533,6 +539,7 @@ namespace tiles {
     //% tile.decompileIndirectFixedInstances=true
     //% blockNamespace="scene" group="Tiles" blockGap=8
     //% help=tiles/get-tiles-by-type
+    //% deprecated=1
     export function getTilesByType(tile: Image): Location[] {
         const scene = game.currentScene();
         if (!tile || !scene.tileMap) return [];

@@ -87,6 +87,7 @@ namespace scene {
     //% blockId=spriteshittile block="on $sprite of kind $kind=spritekind overlaps $tile at $location"
     //% tile.shadow=tileset_tile_picker
     //% help=tiles/on-overlap-tile
+    //% deprecated=1
     export function onOverlapTile(kind: number, tile: Image, handler: (sprite: Sprite, location: tiles.Location) => void) {
         if (kind == undefined || !tile || !handler) return;
 
@@ -109,6 +110,7 @@ namespace scene {
     //% weight=120 draggableParameters="reporter" blockGap=8
     //% blockId=spriteshitwall block="on $sprite of kind $kind=spritekind hits wall"
     //% help=tiles/on-hit-wall
+    //% deprecated=1
     export function onHitWall(kind: number, handler: (sprite: Sprite) => void) {
         if (kind == undefined || !handler) return;
 
