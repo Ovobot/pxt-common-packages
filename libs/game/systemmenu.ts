@@ -308,6 +308,11 @@ namespace scene.systemMenu {
         power.deepSleep();
     }
 
+    function rtcSetting() {
+        scene.rtcSetting.showRtcSettingScene();
+
+    }
+
     export function closeMenu() {
         if (instance) {
             instance.dispose();
@@ -334,6 +339,7 @@ namespace scene.systemMenu {
         options.push(new MenuOption(STATS_ICON, () => game.stats ? "HIDE STATS" : "SHOW STATS", toggleStats));
         options.push(new MenuOption(CONSOLE_ICON, () => game.consoleOverlay.isVisible() ? "HIDE CONSOLE" : "SHOW CONSOLE", toggleConsole));
         options.push(new MenuOption(SLEEP_ICON, () => "SLEEP", sleep));
+        options.push(new MenuOption(SLEEP_ICON, () => "RTC SETTING", rtcSetting));
 
         if (customMenuOptions) {
             options = options.concat(customMenuOptions);

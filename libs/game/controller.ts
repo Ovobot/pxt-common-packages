@@ -34,7 +34,7 @@ enum ControllerEvent {
  * Access to game controls
  */
 //% weight=98 color="#D54322" icon="\uf11b"
-//% groups='["Single Player", "Multiplayer"]'
+//% groups='["Button", "Extras"]'
 //% blockGap=8
 namespace controller {
     let _userEventsEnabled = true;
@@ -108,7 +108,7 @@ namespace controller {
          */
         //% weight=99 blockGap=8 help=controller/button/on-event
         //% blockId=keyonevent block="on %button **button** %event"
-        //% group="Single Player"
+        //% group="Button"
         onEvent(event: ControllerButtonEvent, handler: () => void) {
             control.onEvent(event, this.id, handler);
         }
@@ -118,7 +118,7 @@ namespace controller {
          */
         //% weight=98 blockGap=8 help=controller/button/pause-until
         // blockId=keypauseuntil block="pause until %button **button** is %event"
-        //% group="Single Player"
+        //% group="Button"
         pauseUntil(event: ControllerButtonEvent) {
             control.waitForEvent(event, this.id)
         }
@@ -128,7 +128,7 @@ namespace controller {
          */
         //% weight=96 blockGap=8 help=controller/button/is-pressed
         //% blockId=keyispressed block="is %button **button** pressed"
-        //% group="Single Player"
+        //% group="Button"
         isPressed() {
             return this._pressed;
         }
@@ -213,7 +213,7 @@ namespace controller {
 
     export function _player1(): Controller {
         if (!_players || !_players[0])
-            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B, controller.menu]);
+            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B,controller.C, controller.menu]);
         return _players[0];
     }
 
@@ -352,6 +352,7 @@ namespace controller {
         //% vx.defl=100 vy.defl=100
         //% help=controller/move-sprite
         //% group="Multiplayer"
+        //% blockHidden=1
         moveSprite(sprite: Sprite, vx: number = 100, vy: number = 100) {
             if (!sprite) return;
             if (!this._controlledSprites) this._controlledSprites = [];
@@ -381,6 +382,7 @@ namespace controller {
         //% blockId=ctrlonbuttonevent block="on %controller %button **button** %event"
         //% group="Multiplayer"
         //% help=controller/on-button-event
+        //% blockHidden=1
         onButtonEvent(btn: ControllerButton, event: ControllerButtonEvent, handler: () => void) {
             this.button(btn).onEvent(event, handler);
         }
@@ -394,6 +396,7 @@ namespace controller {
         //% blockId=ctrlonevent block="on %controller %event"
         //% group="Multiplayer"
         //% help=controller/on-event
+        //% blockHidden=1
         onEvent(event: ControllerEvent, handler: () => void) {
             control.onEvent(this.id, event, handler);
         }
@@ -415,6 +418,7 @@ namespace controller {
         //% weight=96 blockGap=8 help=controller/button/is-pressed
         //% blockId=ctrlispressed block="is %controller %button **button** pressed"
         //% group="Multiplayer"
+        //% blockHidden=1
         isPressed(btn: ControllerButton): boolean {
             return this.button(btn).isPressed();
         }
@@ -427,6 +431,7 @@ namespace controller {
         //% blockId=ctrldx block="%controller dx (left-right buttons)||scaled by %step"
         //% step.defl=100
         //% group="Multiplayer"
+        //% blockHidden=1
         dx(step: number = 100) {
             const ctx = control.eventContext();
             if (!ctx) return 0;
@@ -449,6 +454,7 @@ namespace controller {
         //% blockId=ctrldy block="%controller dy (up-down buttons)||scaled by %step"
         //% step.defl=100
         //% group="Multiplayer"
+        //% blockHidden=1
         dy(step: number = 100) {
             const ctx = control.eventContext();
             if (!ctx) return 0;
@@ -570,7 +576,8 @@ namespace controller {
     //% expandableArgumentMode="toggle"
     //% vx.defl=100 vy.defl=100
     //% help=controller/move-sprite
-    //% group="Single Player"
+    //% group="Button"
+    //% blockHidden=1
     export function moveSprite(sprite: Sprite, vx: number = 100, vy: number = 100) {
         _player1().moveSprite(sprite, vx, vy);
     }
@@ -595,7 +602,8 @@ namespace controller {
     //% weight=50 blockGap=8 help=controller/dx
     //% blockId=keydx block="dx (left-right buttons)||scaled by %step"
     //% step.defl=100
-    //% group="Single Player"
+    //% group="Button"
+    //% blockHidden=1
     export function dx(step: number = 100) {
         return _player1().dx(step);
     }
@@ -607,7 +615,8 @@ namespace controller {
     //% weight=49 help=keys/dy
     //% blockId=keydy block="dy (up-down buttons)||scaled by %step"
     //% step.defl=100
-    //% group="Single Player"
+    //% group="Button"
+    //% blockHidden=1
     export function dy(step: number = 100) {
         return _player1().dy(step);
     }

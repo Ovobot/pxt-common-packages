@@ -3,6 +3,8 @@ namespace controller {
     export const A = new Button(ControllerButton.A, -1);
     //% fixedInstance whenUsed block="{id:controller}B"
     export const B = new Button(ControllerButton.B, -1);
+    //% fixedInstance whenUsed block="{id:controller}C"
+    export const C = new Button(8, -1);
     //% fixedInstance whenUsed block="left"
     export const left = new Button(ControllerButton.Left, -1);
     //% fixedInstance whenUsed block="up"

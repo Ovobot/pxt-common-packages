@@ -41,7 +41,8 @@
         "particlefactories.ts",
         "particleeffects.ts",
         "effects.ts",
-        "texteffects.ts"
+        "texteffects.ts",
+        "rtcsetting.ts"
     ],
     "public": true,
     "dependencies": {
@@ -49,5 +50,6 @@
         "screen": "file:../screen",
         "mixer": "file:../mixer",
         "power": "file:../power"
+
     }
 }

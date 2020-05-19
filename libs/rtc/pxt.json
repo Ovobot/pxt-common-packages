@@ -1,0 +1,17 @@
+{
+    "name": "rtc",
+    "description": "An rtc library for xtronpro",
+    "files": [
+        "rtc.ts",
+        "numthemeicons.ts",
+        "theme.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "dependencies": {
+        "game": "file:../game",
+        "screen": "file:../screen"
+    }
+}

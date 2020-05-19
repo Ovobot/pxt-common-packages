@@ -13,6 +13,7 @@ void _fillRect(Image_ img, int xy, int wh, int c);
 Image_ clone(Image_ img);
 void flipX(Image_ img);
 void flipY(Image_ img);
+Image_ xshear(Image_ srcimg, int deg);
 void scroll(Image_ img, int dx, int dy);
 Image_ doubledX(Image_ img);
 Image_ doubledY(Image_ img);
