@@ -74,7 +74,6 @@ namespace controller {
      * @param body code to run when gesture is raised
      */
     //% blockId=ctrlongesture block="on |%NAME"
-    //% parts="accelerometer"
     //% gesture.fieldEditor="gridpicker"
     //% gesture.fieldOptions.width=220
     //% gesture.fieldOptions.columns=3
@@ -107,4 +106,7 @@ namespace controller {
     export function acceleration(dimension: ControllerDimension): number {
         return controller.__internal.acceleration(dimension);
     }
+
+
+
 }

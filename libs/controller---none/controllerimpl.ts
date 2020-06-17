@@ -8,6 +8,10 @@ namespace controller.__internal {
     export function acceleration(dimension: ControllerDimension): number {
         return 0;
     }
+
+    export function hanldeStepAcc(): number {
+        return 0;
+    }
 }
 
 namespace controller.__internal {

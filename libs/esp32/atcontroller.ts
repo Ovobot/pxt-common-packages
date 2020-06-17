@@ -17,11 +17,48 @@ namespace esp32 {
     export class ATController extends net.Controller {
         private prefix = "AT";
         private newLine = "\r\n";
-
+        private wifiConnResponse:ATResponse;
+        private currentSpeechRes = "";
         constructor(private ser: serial.Serial) {
             super();
             this.ser.serialDevice.setRxBufferSize(128);
             this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
+        }
+
+        parseIntRadix(s: string, base?: number) {
+            if (base == null || base == 10) {
+                return parseFloat(s) | 0
+            }
+    
+            let m = false
+            let r = 0
+            for (let i = 0; i < s.length; ++i) {
+                let c = s.charCodeAt(i)
+                if (c == 0x20 || c == 10 || c == 13 || c == 9)
+                    continue
+                if (r == 0 && !m && c == 0x2d) {
+                    m = true
+                    continue
+                }
+    
+                let v = -1
+                if (0x30 <= c && c <= 0x39)
+                    v = c - 0x30
+                else {
+                    c |= 0x20
+                    if (0x61 <= c && c <= 0x7a)
+                        v = c - 0x61 + 10
+                }
+    
+                if (0 <= v && v < base) {
+                    r *= base
+                    r += v
+                } else {
+                    return undefined
+                }
+            }
+    
+            return m ? -r : r
         }
 
         /**
@@ -38,7 +75,7 @@ namespace esp32 {
             while (args && args.length && args[args.length - 1] === undefined)
                 args.pop();
             if (args && args.length > 0) {
-                txt += "=" + args.map(arg => "" + arg).join(",");
+                txt += "=" + args.map(arg => "\""  + arg + "\"").join(",");
             }
             txt += this.newLine;
             // send over
@@ -48,26 +85,33 @@ namespace esp32 {
             let errorCode: number = 0;
             let line = "";
             const lines: string[] = [];
-            do {
-                line = this.ser.readLine();
-                if (line == "OK")
-                    status = ATStatus.Ok;
-                else if (line == "ERROR")
-                    status = ATStatus.Error;
-                else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
-                errorCode = parseInt(line.substr("ERR CODE:".length + 2), 16)
-                else if (!line.length) continue; // keep reading
-                else lines.push(line);
-            } while (status == ATStatus.None);
+            //control.runInBackground(() => {
+                do {
+                    line = this.ser.readNewLine();
+                    //this.ser.writeString(line);
+                    console.log(line)
+                    if (line == "OK")
+                        status = ATStatus.Ok;
+                    else if (line == "ERROR")
+                        status = ATStatus.Error;
+                    else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
+                        errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16); //parseInt(line.substr("ERR CODE:".length + 2), 16)
+                    else if (!line.length) continue; // keep reading
+                    else lines.push(line);
+                    //pause(10);
+                    pause(20);
+                } while (status == ATStatus.None);
+            //});
+
 
             return { status: status, errorCode: errorCode, lines: lines };
         }
 
         private parseNumber(r : ATResponse): number {
-            if (r.status != ATStatus.Ok || !lines.length)
+            if (r.status != ATStatus.Ok || !r.lines.length)
                 return undefined;
 
-            const line = lines[0];
+            const line = r.lines[0];
             if (line[0] != "+")
                 return undefined;
 
@@ -85,6 +129,7 @@ namespace esp32 {
         }
 
         get isConnected(): boolean {
+            if(this.wifiConnResponse) return this.wifiConnResponse.status == ATStatus.Ok;
             return false;
         }
         connect(): void { 
@@ -105,8 +150,57 @@ namespace esp32 {
             return -1;
         }
 
-        public socketConnect(socket_num: number, dest: string | Buffer, port: number, conn_mode = TCP_MODE): boolean {
+        public isWakeUp():boolean{
+            let line = this.ser.readNewLine();
+            console.log("recv->" + line);
+            if (line == "OK") return true;
+            else return false;
+        }
+
+        public atRegisterWithDal(event: number, handler: () => void){
+            if(this.ser){
+                this.ser.serialDevice.onEvent(event, handler);
+            }
+        }
+
+        public socketConnect(socket_num: number, dest: string | Buffer, port: number, conn_mode = net.TCP_MODE): boolean {
             return false;
+        }
+
+        public wifiConnect(ssid:string,password:string){
+            const r = this.sendAT("CWMODE=1");
+            if(r.status == ATStatus.Ok) {
+               this.wifiConnResponse = this.sendAT("CWJAP",[ssid,password]); 
+            }
+        }
+
+        public setSpeechTime(time:number){
+            let r =  Math.constrain(time, 1, 4);
+            this.sendAT("SPEECH="+time);
+            //pause(time * 1000);
+        }
+
+        public setSpeechWkWord(wkword:number){
+            this.sendAT("AT+SPEECHWAKE="+wkword);
+        }
+
+        public setSpeechLang(lang:string){
+            this.sendAT("AT+SPEECHLANG="+lang);
+        }
+
+        public getSpeechRecResult():string{
+            const r = this.sendAT("SPEECHRES");
+            if(r.status == ATStatus.Ok) {
+                const res = r.lines[1];
+                this.currentSpeechRes = res;
+                return res; 
+            }
+            this.currentSpeechRes = "";
+            return "";
+        }
+
+        public isSpeechResContain(str:string):boolean{
+            return this.currentSpeechRes.indexOf(str) > -1;
         }
 
         public socketWrite(socket_num: number, buffer: Buffer): void {

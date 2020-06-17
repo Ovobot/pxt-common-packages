@@ -4,6 +4,9 @@
     "files": [
         "net.ts",
         "ninacontroller.ts",
+        "atcontroller.ts",
+        "speech.ts",
+        "tsconfig.json",
         "README.md"
     ],
     "testFiles": [
@@ -11,6 +14,7 @@
     ],
     "public": true,
     "dependencies": {
+        "serial":"file:../serial",
         "core": "file:../core",
         "net": "file:../net",
         "settings": "file:../settings"

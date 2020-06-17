@@ -9,6 +9,9 @@
 #include "ZI2C.h"
 #include "ZSingleWireSerial.h"
 
+#include "XtronSerial.h"
+
+
 #include "pinmap.h"
 
 #define BOOTLOADER_START 0x08000000
@@ -61,16 +64,17 @@ struct F4_Settings {
 // Codal doesn't yet distinguish between PWM and AIN
 #define DEV_ANALOG_PINS (DEV_PWM_PINS | DEV_AIN_PINS)
 
+
 #define CODAL_PIN ZPin
 #define CODAL_TIMER Timer
 #define CODAL_SPI ZSPI
 #define CODAL_I2C ZI2C
 #define CODAL_JACDAC_WIRE_SERIAL codal::ZSingleWireSerial
 
+#define CODAL_SERIAL XtronSerial
 #define PERF_NOW() (TIM5->CNT)
 
 #define IMAGE_BITS 4
-
 
 // The parameters below needs tuning!
 

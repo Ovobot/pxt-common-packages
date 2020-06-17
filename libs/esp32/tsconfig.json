@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "rootDir": ".",
+        "newLine": "LF",
+        "sourceMap": false
+    },
+    "files": [
+        "atcontroller.ts"
+    ]
+}

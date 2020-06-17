@@ -12,7 +12,8 @@
         "ns.ts",
         "pxtparts.json",
         "part.svg",
-        "jacdac.ts"
+        "jacdac.ts",
+        "step.ts"
     ],
     "testFiles": [
         "test.ts"

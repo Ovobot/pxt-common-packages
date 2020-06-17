@@ -4,6 +4,7 @@
 #include "I2C.h"
 #include "CoordinateSystem.h"
 #include "Accelerometer.h"
+#include "count_steps.h"
 
 enum class Dimension {
     //% block=x
@@ -112,7 +113,11 @@ enum class Gesture {
 // defined in accelhw.cpp
 namespace pxt {
 codal::Accelerometer *getAccelerometer();
-
+int8_t   data[NUM_TUPLES*3];
+int currentStep = 0;
+int accIndex = 0;
+float  scale_factor = 55.3293;
+float accMix = 0;
 void initAccelRandom() {
     auto acc = getAccelerometer();
     if (!acc) return;
@@ -189,6 +194,56 @@ int acceleration(Dimension dimension) {
         return (int)sqrtf(x * x + y * y + z * z);
     }
     return 0;
+}
+
+float fast_inverse_sqrt(float x)
+{
+    float half_x = 0.5 * x;
+    int i = *((int *)&x); // 以整数方式读取X
+    i = 0x5f3759df - (i>>1); // 神奇的步骤
+    x = *((float *)&i); // 再以浮点方式读取i
+    x = x*(1.5 - (half_x * x * x)); // 牛顿迭代一遍提高精度
+    return x;
+} 
+
+/**
+ * The pitch or roll of the device, rotation along the ``x-axis`` or ``y-axis``, in degrees.
+ */
+//% help=input/rotation
+//% blockId=device_get_step block="get step"
+//% parts="accelerometer"
+//% group="More" weight=38
+int hanldeStepAcc() {
+    uint8_t  num_steps = 0;
+    // float    temp = 0;
+    float    n[3] = {0};
+    float squareTotal = 0;
+    float fastInv =0; 
+    auto acc = getAccelerometer();
+    if (!acc) return 0;
+    acc->requestUpdate();
+    n[0] = acc->getX() / 1000 * 9.8;
+    n[1] = acc->getY() / 1000 * 9.8;
+    n[2] = acc->getZ() / 1000 * 9.8;
+    squareTotal = n[0] * n[0] + n[1] *n[1] + n[2] * n[2];
+    fastInv = fast_inverse_sqrt(squareTotal);
+    accMix = 1 / fastInv;
+
+    // temp = roundf(n[0]*scale_factor);
+    // data[accIndex++] = (int8_t)temp;
+    // temp = roundf(n[1]*scale_factor);
+    // data[accIndex++] = (int8_t)temp;
+    // temp = roundf(n[2]*scale_factor);
+    // data[accIndex++] = (int8_t)temp;
+
+    // if (accIndex >= NUM_TUPLES*3)
+    // {
+    //     accIndex = 0;
+    //     num_steps = count_steps(data);
+    // }
+    
+    return num_steps;
+
 }
 
 /**

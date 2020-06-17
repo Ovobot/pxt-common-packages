@@ -25,6 +25,12 @@ namespace serial {
             return this.readUntil(Delimiters.NewLine, timeOut);
         }
 
+        readNewLine(timeOut?: number): string {
+            let line = this.readLine();
+            return line.substr(0,line.length-1);
+        }
+
+
         readUntil(delimiter: Delimiters, timeOut?: number): string {
             const start = control.millis();
             do {
