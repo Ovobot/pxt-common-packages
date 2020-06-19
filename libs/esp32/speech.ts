@@ -2,9 +2,8 @@
 /**
  * Networking, WiFi, Speech recognition
  */
-//% weight=1
-//% advanced=true
-//% icon="\uf1eb" color="#8446cf"
+//% weight=90
+//% icon="\uf130" color="#8446cf"
 namespace speech {
     export const CODAL_SERIAL_WAKEUP_RECEIVED = 5
 

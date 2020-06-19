@@ -115,26 +115,10 @@ namespace controller{
         return tempThread;
     
     }
-    // 初始阈(yu)值
     initialThreshold = 1.7
-    // 动态阈值需要动态的数据，这个值用于这些动态数据的阈值
     threadThreshold = 2
-    // 用于存放计算阈值的波峰波谷差值
     let valueNum = 5
     let tempValue = [0, 0, 0, 0, 0]
-    let lastStep = -1
-    // 倒计时3.5秒，3.5秒内不会显示计步，用于屏蔽细微波动
-    let duration = 1
-    /**
-     * 计步状态 0-未计步   1-预备计步，计时中   2-正常计步中，存储
-     */
-    /**
-     * 阈值的计算 1.通过波峰波谷的差值计算阈值 2.记录4个值，存入tempValue[]数组中 3.在将数组传入函数averageValue中计算阈值
-     */
-    /**
-     * 梯度化阈值 1.计算数组的均值 2.通过均值将阈值梯度化在一个范围里
-     */
-
 
     //% blockId=startPedometer block="start pedometer"
     //% parts="accelerometer"

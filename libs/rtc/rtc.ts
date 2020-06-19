@@ -118,7 +118,7 @@ enum SegmentCharacter {
     //% block="°"
     Degree
 }
-//% color=190 weight=100 icon="\uf1ec" block="RTC"
+//% color=190 weight=100 icon="\uf133" block="RTC"
 //% groups='["Time","Create", "Basic","Separator", "Theme", "Digits" ]'
 namespace rtcModules {
 

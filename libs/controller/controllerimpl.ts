@@ -70,6 +70,7 @@ namespace controller {
     //% blockId=controller_show_animation block="start light animation %animation=light_animation_picker|for %duration=timePicker|ms"
     //% weight=30 blockGap=8
     //% group="Extras"
+    //% blockHidden=1
     export function startLightAnimation(animation: light.NeoPixelAnimation, duration: number) {
         controller.__internal.startLightAnimation(animation, duration);
     }

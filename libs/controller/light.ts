@@ -6,6 +6,7 @@ namespace controller {
     //% blockId="ctrllightpulse" block="start light pulse %rgb=colorNumberPicker|for %duration=timePicker|ms"
     //% weight=80 blockGap=8
     //% group="Extras"
+    //% blockHidden=1
     export function startLightPulse(rgb: number, duration: number) {
         controller.__internal.startLightPulse(rgb, duration);
     }
