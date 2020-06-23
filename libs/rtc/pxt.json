@@ -4,7 +4,9 @@
     "files": [
         "rtc.ts",
         "numthemeicons.ts",
-        "theme.ts"
+        "theme.ts",
+        "rtc.cpp",
+        "rtchw.cpp"
     ],
     "testFiles": [
         "test.ts"

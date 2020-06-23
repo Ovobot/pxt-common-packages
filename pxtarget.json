@@ -43,6 +43,7 @@
         "libs/edge-connector",
         "libs/proximity",
         "libs/feather",
+        "libs/rtc",
         "libs/esp32",
         "libs/net",
         "libs/net-game",

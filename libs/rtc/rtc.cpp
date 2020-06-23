@@ -23,57 +23,84 @@
 #define DS1339_ALARM1_ADDR 0x07
 #define DS1339_ALARM2_ADDR 0x0B
 
+#define RTC_TYPE_DS1339 0x68
+
+// defined in rtchw.cpp
 namespace pxt {
+  codal::I2C *getRtcI2C();
+  uint8_t rtc_bcd[7];
 
-class WRtc {
-  public:
-    WRtc() //
-    {
-        
-        auto sda = LOOKUP_PIN(SDA);
-        auto scl = LOOKUP_PIN(SCL);
-        codal::I2C* i2c = pxt::getI2C(sda, scl);
-        if (NULL == i2c) {
-            DMESG("rtc: no i2c available");
-            return;
-        }
-        int accDetect = detectRTC(i2c);
-    }
-  private:
-    int detectRTC(codal::I2C* i2c){
-		uint8_t data;
-		int result;
-
-		result = i2c->readRegister(RTC_TYPE_DS1339, REG_DS1339_SECONDS, &data, 1);
-        if(result == 0) {
-            DMESG("rtc: seconds %d", data);
-        }
-		// if (result ==0)
-		// 	return ACCELEROMETER_TYPE_LIS3DH;
-		// result = i2c->readRegister(ACCELEROMETER_TYPE_LIS3DH_ALT, LIS3DH_WHOAMI, &data, 1);
-		// if (result ==0)
-		// 	return ACCELEROMETER_TYPE_LIS3DH_ALT;
-			
-
-		return -1;
-	}
-};
-SINGLETON_IF_PIN(WRtc, SCL);
 
 }
 
-// /**
-//  * Read the light level applied to the LED screen in a range from 0 (dark) to 255 (bright).
-//  */
-// //% help=input/light-level
-// //% blockId=device_get_rtc_seconds block="rtc seconds"
-// //% parts="rtc"
-// //% weight=30 blockGap=8
-// int rtcSeconds() {
-//     auto wrtc = getWRtc();
-//     if (NULL == wrtc) return -1;
-//     auto sensor = wlight->sensor;
-//     // 0...1023
-//     int value = sensor.getValue();
-//     return value / 4;
-// }
+namespace rtcModules{
+  //%
+  void requestUpdate(){
+    auto i2c = getRtcI2C();
+    if (!i2c) return;
+    i2c->readRegister(RTC_TYPE_DS1339 << 1, REG_DS1339_SECONDS, rtc_bcd, 7);
+  }
+
+  //%
+  int getSeconds() {
+    uint8_t res = rtc_bcd[0];
+    uint8_t data = (res & 0x7f);
+    uint8_t seconds = (data>>4)*10 + (data&0x0f);
+    return seconds;
+  }
+
+  //%
+  int getMinutes() {
+    uint8_t res = rtc_bcd[1];
+    uint8_t data = (res & 0x7f);
+    uint8_t minutes = (data>>4)*10 + (data&0x0f);
+    return minutes;
+  }
+
+  //%
+  int getHours() {
+    uint8_t minutes = 0;
+    uint8_t res = rtc_bcd[2];
+    uint8_t data = (res & 0x7f);
+    uint8_t flag12 =  data >> 6;
+    if(flag12){
+        uint8_t getAMPM = (data &= (1<<5));
+        uint8_t data2 = (data & 0x1f);
+        minutes = (data2>>4)*10 + (data&0x0f);
+    } else {
+        uint8_t data2 = (data & 0x3f);
+        minutes = (data2>>5)*20 + ((data & 0x1f)>>4)*10 + (data2&0x0f);
+    }
+    return minutes;
+  }
+
+  //%
+  int getDay() {
+    uint8_t day = rtc_bcd[3];
+    return day;
+  }
+
+  //%
+  int getDate() {
+    uint8_t res = rtc_bcd[4];
+    uint8_t data = (res & 0x3f);
+    uint8_t date = (data>>4)*10 + (data&0x0f);
+    return date;
+  }
+
+  //%
+  int getMonth() {
+    uint8_t res = rtc_bcd[5];
+    uint8_t data = (res & 0x1f);
+    uint8_t month = (data>>4)*10 + (data&0x0f);
+    return month;
+  }
+
+  //%
+  int getFullYear() {
+    uint8_t res = rtc_bcd[6];
+    uint16_t year = 2000 + (res >> 4) * 10 + (res & 0x0f);
+    return year;
+  }
+}
+

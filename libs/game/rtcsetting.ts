@@ -91,7 +91,7 @@ namespace scene.rtcSetting{
         private confirmButton: Sprite;
         private inputs: Sprite[];
         private hmsinputs: Sprite[];
-
+        private isEditing:boolean;
         answerLength: number;
         private blink: boolean;
         private frameCount: number;
@@ -394,13 +394,23 @@ namespace scene.rtcSetting{
         //     return this.substr(0, index) + replacement+ this.substr(index + replacement.length);
         // }
 
+        private replaceStr(str:string, index:number, char:string){
+            const strAry = str.split('');
+            strAry[index] = char;
+            return strAry.join('');
+        }
+
         private changeNumber(){
+            this.isEditing = true;
             this.currentInputNum = this.currentInputNum + 1 > 9 ? 0 : this.currentInputNum + 1;
-            this.timeymdstr = this.timeymdstr.substr(0, this.inputIndex) + this.currentInputNum + this.timeymdstr.substr(this.inputIndex + 1);
+            this.timeymdstr = this.replaceStr(this.timeymdstr,this.inputIndex,''+ this.currentInputNum);
+            //this.timeymdstr = this.timeymdstr.substr(0, this.inputIndex) + this.currentInputNum + this.timeymdstr.substr(this.inputIndex + 1);
+            this.isEditing = false;
         }
 
         private changeEditInput(right:boolean){
             //this.changeInputIndex(1);
+            if(this.isEditing) return;
             if(right){
                 if (this.inputIndex >= this.answerLength+5) {
                     // this.inputIndex = this.answerLength + 5;
@@ -423,10 +433,10 @@ namespace scene.rtcSetting{
     
                 this.inputIndex += 1;
                 this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
-    
+
                 this.frameCount = 0
                 this.blink = false;
-                this.updateSelectedInput();
+                //this.updateSelectedInput();
             } else {
                 if (this.inputIndex == 0){
                     return;
@@ -446,10 +456,10 @@ namespace scene.rtcSetting{
     
                 this.inputIndex -= 1;
                 this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
-    
+
                 this.frameCount = 0
                 this.blink = false;
-                this.updateSelectedInput();
+               // this.updateSelectedInput();
             }
 
         }
@@ -493,6 +503,7 @@ namespace scene.rtcSetting{
 
 
         private registerHandlers() {
+            controller._setUserEventsEnabled(false);
             controller.up.onEvent(SYSTEM_KEY_DOWN, () => {
                 //this.moveVertical(true);
             })
@@ -501,15 +512,24 @@ namespace scene.rtcSetting{
                 //this.moveVertical(false);
             })
 
-            controller.right.onEvent(SYSTEM_KEY_DOWN, () => {
+            controller.right.onEvent(SYSTEM_KEY_UP, () => {
                 this.changeEditInput(true);
             });
 
-            controller.left.onEvent(SYSTEM_KEY_DOWN, () => {
+            controller.left.onEvent(SYSTEM_KEY_UP, () => {
                 this.changeEditInput(false);
             });
 
             controller.A.onEvent(SYSTEM_KEY_DOWN, () => {
+                if(this.inputIndex == this.answerLength + 6){
+                    //this.confirm();
+                } else {
+                    //this.changeNumber();
+                }
+                
+            });
+
+            controller.A.onEvent(SYSTEM_KEY_UP, () => {
                 if(this.inputIndex == this.answerLength + 6){
                     this.confirm();
                 } else {
@@ -538,15 +558,19 @@ namespace scene.rtcSetting{
         }
 
         private updateSelectedInput() {
+            if(this.isEditing) return;
             if (this.inputIndex < this.answerLength + 6) {
                 const u = this.inputs[this.inputIndex];
-                const letter = this.timeymdstr.substr(this.inputIndex, 1);
+                //const letter = this.timeymdstr.substr(this.inputIndex, 1);
+                // console.log("index:"+ this.inputIndex);
+                // console.log('letter:' + letter);
+                // console.log('timeymdstr:' +  this.timeymdstr);
 
                 if (this.blink) {
-                    this.drawInput(u.image, letter, this.theme.colorInput,true);
+                    this.drawInput(u.image, '' + this.currentInputNum , this.theme.colorInput,true);
                 }
                 else {
-                    this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
+                    this.drawInput(u.image, '' + this.currentInputNum , this.theme.colorInputHighlighted,false);
                 }
             }
         }
@@ -642,7 +666,9 @@ namespace scene.rtcSetting{
 
     export function showRtcSettingScene() {
         if (instance) return;
+        //
         game.pushScene();
+        controller._setUserEventsEnabled(false);
         instance = new rtcSettingScene();
         instance.show();
     }
@@ -651,6 +677,9 @@ namespace scene.rtcSetting{
         if (instance) {
             instance = undefined;
         }
+        //controller._setUserEventsEnabled(true);
+
         game.popScene();
+
     }
 }

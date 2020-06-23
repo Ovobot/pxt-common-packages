@@ -310,7 +310,6 @@ namespace scene.systemMenu {
 
     function rtcSetting() {
         scene.rtcSetting.showRtcSettingScene();
-
     }
 
     export function closeMenu() {

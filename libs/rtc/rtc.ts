@@ -281,13 +281,49 @@ namespace rtcModules {
     let secondsSp:Sprite[] = undefined;
     let numThemeMap:Image[] = undefined;
     let numspace = 1;
-    function requestUpdate(){
-        pins.i2cWriteNumber(RTC_TYPE_DS1339, REG_DS1339_SECONDS, NumberFormat.UInt8LE)
-        const buf = pins.i2cReadBuffer(RTC_TYPE_DS1339, 7);
-        for(let i = 0; i < 7; ++i) {
-            rtc_bcd[i] = buf.getNumber(NumberFormat.UInt8LE, i);
-        }
-    }
+
+    //% shim=rtcModules::requestUpdate
+    function requestUpdate() { }
+
+    //% shim=rtcModules::getSeconds
+    export declare function getSeconds(): number;
+
+    //% shim=rtcModules::getMinutes
+    export declare function getMinutes():number;
+
+    //% shim=rtcModules::getHours
+    export declare function getHours():number;
+
+    //% shim=rtcModules::getDay
+    export declare function getDay():number;
+
+    //% shim=rtcModules::getDate
+    export declare function getDate():number;
+
+    //% shim=rtcModules::getMonth
+    export declare function getMonth():number;
+
+    //% shim=rtcModules::getFullYear
+    export declare function getFullYear():number;
+
+    // function requestUpdate(){
+    //     // pins.i2cWriteNumber(RTC_TYPE_DS1339, REG_DS1339_SECONDS, NumberFormat.UInt8LE)
+    //     // const buf = pins.i2cReadBuffer(RTC_TYPE_DS1339, 7);
+    //     // for(let i = 0; i < 7; ++i) {
+    //     //     rtc_bcd[i] = buf.getNumber(NumberFormat.UInt8LE, i);
+    //     // }
+
+    //     //const d: number = Date.now();
+
+    //     // rtc_bcd[0] = bin2bcd(d.getSeconds());
+    //     // rtc_bcd[1] = bin2bcd(d.getMinutes());
+    //     // rtc_bcd[2] = bin2bcd(d.getHours());
+    //     // rtc_bcd[3] = bin2bcd(d.getDay());
+    //     // rtc_bcd[4] = bin2bcd(d.getDate());   
+    //     // rtc_bcd[5] = bin2bcd(d.getMonth());  
+    //     // rtc_bcd[6] = bin2bcd(d.getFullYear());   
+
+    // }
 
     /**
      * TODO: start rtc timer.
@@ -326,10 +362,10 @@ namespace rtcModules {
     //% blockHidden=1
     export function readSeconds(): number {
         //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_SECONDS, NumberFormat.UInt8LE);
-        let res = rtc_bcd[0];
-        let data = (res & 0x7f);
-        let seconds = (data>>4)*10 + (data&0x0f);
-        return seconds;
+        // let res = rtc_bcd[0];
+        // let data = (res & 0x7f);
+        // let seconds = (data>>4)*10 + (data&0x0f);
+        return getSeconds();
     }
 
     /**
@@ -340,10 +376,10 @@ namespace rtcModules {
     //% blockHidden=1
     export function readMinutes(): number {
         //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_MINUTES, NumberFormat.UInt8LE);
-        let res = rtc_bcd[1];
-        let data = (res & 0x7f);
-        let minutes = (data>>4)*10 + (data&0x0f);
-        return minutes;
+        // let res = rtc_bcd[1];
+        // let data = (res & 0x7f);
+        // let minutes = (data>>4)*10 + (data&0x0f);
+        return getMinutes();
     }
 
     /**
@@ -353,21 +389,22 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readHours(): number {
-        let minutes = 0;
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_HOURS, NumberFormat.UInt8LE);
-        let res = rtc_bcd[2];
-        let data = (res & 0x7f);
-        let flag12 =  data >> 6;
-        if(flag12){
+        // let minutes = 0;
+        // //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_HOURS, NumberFormat.UInt8LE);
+        // let res = rtc_bcd[2];
+        // let data = (res & 0x7f);
+        // let flag12 =  data >> 6;
+        // if(flag12){
 
-            let getAMPM = (data &= (1<<5));
-            let data2 = (data & 0x1f);
-            minutes = (data2>>4)*10 + (data&0x0f);
-        } else {
-            let data2 = (data & 0x3f);
-            minutes = (data2>>5)*20 + ((data & 0x1f)>>4)*10 + (data2&0x0f);
-        }
-        return minutes;
+        //     let getAMPM = (data &= (1<<5));
+        //     let data2 = (data & 0x1f);
+        //     minutes = (data2>>4)*10 + (data&0x0f);
+        // } else {
+        //     let data2 = (data & 0x3f);
+        //     minutes = (data2>>5)*20 + ((data & 0x1f)>>4)*10 + (data2&0x0f);
+        // }
+        // return minutes;
+        return getHours();
     }
 
     /**
@@ -378,8 +415,9 @@ namespace rtcModules {
     //% blockHidden=1
     export function readDaysofWeek():number {
         //let day = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_DAY, NumberFormat.UInt8LE);
-        let day = rtc_bcd[3];
-        return day;
+        // let day = rtc_bcd[3];
+        // return day;
+        return getDay();
     }
 
     /**
@@ -390,10 +428,11 @@ namespace rtcModules {
     //% blockHidden=1
     export function readDate():number {
         //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_DATE, NumberFormat.UInt8LE);
-        let res = rtc_bcd[4];
-        let data = (res & 0x3f);
-        let date = (data>>4)*10 + (data&0x0f);
-        return date;
+        // let res = rtc_bcd[4];
+        // let data = (res & 0x3f);
+        // let date = (data>>4)*10 + (data&0x0f);
+        // return date;
+        return getDate();
     }
 
     /**
@@ -404,10 +443,11 @@ namespace rtcModules {
     //% blockHidden=1
     export function readMonths():number {
         //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_MONTH, NumberFormat.UInt8LE);
-        let res = rtc_bcd[5];
-        let data = (res & 0x1f);
-        let month = (data>>4)*10 + (data&0x0f);
-        return month;
+        // let res = rtc_bcd[5];
+        // let data = (res & 0x1f);
+        // let month = (data>>4)*10 + (data&0x0f);
+        // return month;
+        return getMonth();
     }
 
     /**
@@ -418,9 +458,11 @@ namespace rtcModules {
     //% blockHidden=1
     export function readYear():number {
         //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_YEAR, NumberFormat.UInt8LE);
-        let res = rtc_bcd[6];
-        let year = 2000 + (res >> 4) * 10 + (res & 0x0f);
-        return year;
+        // let res = rtc_bcd[6];
+        // //let year = 2000 + (res >> 4) * 10 + (res & 0x0f);
+        // let year = (res >> 4) * 10 + (res & 0x0f);
+        // return year;
+        return getFullYear();
     }
 
 
