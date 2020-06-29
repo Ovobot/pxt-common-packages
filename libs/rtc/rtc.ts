@@ -499,15 +499,15 @@ namespace rtcModules {
     export function readDigit(type:DigitsIndex,value:number) : number{
         if(type == DigitsIndex.Thousands){
             if(value < 1000) return 0;
-            return value/1000;
+            return parseInt('' + (value/1000));
         }  else if(type == DigitsIndex.Hundreds){
             if(value < 100) return 0;
-            return (value/100)%10;
+            return parseInt(''+ ((value/100)%10)) ;
         } else if(type == DigitsIndex.Tens){
             if(value < 10) return 0;
-            return (value/10)%10;
+            return parseInt(''+ ((value/10)%10)) ;
         } else {
-            return (value%10);
+            return parseInt('' + (value%10));
         }
     }
 
@@ -822,6 +822,9 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
             this.numThemeMap.push(rtcModules.THEME1_NUM_7)
             this.numThemeMap.push(rtcModules.THEME1_NUM_8)
             this.numThemeMap.push(rtcModules.THEME1_NUM_9)
+            let x=0;
+            let y=0;
+
             for(let i = 0; i < n; i++){
                 let sp =  sprites.create(img`
                 . . . . . . . . . . . . . . . . 
@@ -843,8 +846,10 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
                 `, SpriteKind.Player)
                 sp.setImage(rtcModules.THEME1_NUM_0)    
                 this.timesps.push(sp)
+                x = sp.x;
+                y = sp.y;
             }
-
+            this.displayTimerAtPosition(x,y);
             let timerstate: TimerState = game.currentScene().data[timerNamespace];
 
             // Register animation updates to fire when frames are rendered
