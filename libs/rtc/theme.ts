@@ -22,7 +22,7 @@ namespace rtcModules{
         //% block="add  $frame=screen_image_picker type $themeicon to $this=variables_get(theme)" 
         //% group="Theme"
         //% weight=40
-        //% help=animation/add-animation
+        //% help=rtc/add-theme-num
         addTheme(themeicon: TimerNumTheme = TimerNumTheme.NUM0,frame: Image) {
             if(this.themeMap){
                 this.themeMap[themeicon] = frame;

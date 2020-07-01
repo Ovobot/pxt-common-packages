@@ -195,6 +195,8 @@ void deepSleep() {
     // ask bootloader to do the deep sleeping
     QUICK_BOOT(1);
     RTC->BKP1R = 0x10b37889;
+    for (int i = 0; i < 10; ++i)
+        asm volatile("nop");
     NVIC_SystemReset();
 #endif
 }
