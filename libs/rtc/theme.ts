@@ -28,6 +28,7 @@ namespace rtcModules{
                 this.themeMap[themeicon] = frame;
             } 
         }
+
     }
 
     /**
@@ -40,6 +41,16 @@ namespace rtcModules{
     //% weight=90
     export function createTimerTheme() {
         return new TimerTheme();
+    }
+
+
+    //% weight=25
+    //% blockId=rtc_setThemes block="attach theme $values to timer $timer=variables_get(myTimerComponent)"
+    //% values.shadow="lists_create_with"
+    //% values.defl="screen_image_picker"
+    //% group="Theme"
+    export function setThemes(timer: TimerComponent, values: Image[]): void {
+        timer.setThemeNumAllIcons(values)
     }
 
     /**
