@@ -29,6 +29,8 @@ namespace speech {
 
     let wkmode:boolean = false;
 
+    
+
     //% blockId=speech_wifi_setpassphrase block="Wi-Fi connect to account:%ssid password:%passphrase"
     //% weight=92 blockGap=12
     export function wifiSetPassphrase(ssid: string, passphrase: string): void {

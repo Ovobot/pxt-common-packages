@@ -5,6 +5,13 @@ namespace esp32 {
         Error
     }
 
+    export enum MqttStatus{
+        None,
+        Topic,
+        Message,
+        OK
+    }
+
     export interface ATResponse {
         status: ATStatus;
         errorCode?: number;
@@ -14,13 +21,19 @@ namespace esp32 {
     /**
      * Controller for AT command set https://github.com/espressif/esp-at/blob/master/docs/ESP_AT_Commands_Set.md
      */
+
+
     export class ATController extends net.Controller {
         private prefix = "AT";
         private newLine = "\r\n";
         private wifiConnResponse:ATResponse;
         private currentSpeechRes = "";
+        private mqttCbTopicData: (topic: string, data: string) => void = null;
+        private useMqttEvtLoop = false;
+        private mWakeUp = false;
         constructor(private ser: serial.Serial) {
             super();
+            this.ser.serialDevice.setTxBufferSize(64);
             this.ser.serialDevice.setRxBufferSize(128);
             this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
         }
@@ -151,16 +164,24 @@ namespace esp32 {
         }
 
         public isWakeUp():boolean{
-            let line = this.ser.readNewLine();
-            console.log("recv->" + line);
-            if (line == "OK") return true;
-            else return false;
+            let wake = this.mWakeUp;
+            if(this.useMqttEvtLoop){
+                this.mWakeUp = false;
+                return wake;
+            } else {
+                let line = this.ser.readNewLine();
+                console.log("recv->" + line);
+                if (line == "OK") return true;
+                else return false;
+            }
+
         }
 
         public atRegisterWithDal(event: number, handler: () => void){
             if(this.ser){
                 this.ser.serialDevice.onEvent(event, handler);
             }
+            
         }
 
         public socketConnect(socket_num: number, dest: string | Buffer, port: number, conn_mode = net.TCP_MODE): boolean {
@@ -174,10 +195,83 @@ namespace esp32 {
             }
         }
 
-        public setSpeechTime(time:number){
+        public setSpeechTime(time:number) {
             let r =  Math.constrain(time, 1, 4);
             this.sendAT("SPEECH="+time);
             //pause(time * 1000);
+        }
+
+        public setHost(host:string,client:string) {
+            this.wifiConnResponse = this.sendAT("MQTT",[host,client]); 
+        }
+
+        public pubTopicMessage(topic: string, message: string) {
+            this.wifiConnResponse = this.sendAT("PUB",[topic,message]); 
+        }
+
+        public subTopic(topic:string) {
+            this.wifiConnResponse = this.sendAT("SUB",[topic]); 
+        }
+
+        public registerMqttSubResponse(handler: (topic: string, message: string) => void){
+            this.mqttCbTopicData = handler;
+        }
+
+        public onsubResponse(mqttCb:((data: string) => void)[],mqttCbKey:string[]){
+            let line = "";
+            let mqttstatus =  MqttStatus.None;
+            let resp = "";
+            let handleIndex = -1;
+            let topic = "";
+            this.useMqttEvtLoop = true;
+            control.runInBackground(() => {
+                do {
+                    line = this.ser.readNewLine();
+                    //this.ser.writeString(line);
+                    if(line == "AT+WAKE"){
+                        this.mWakeUp = true;
+                    } else if (mqttstatus == MqttStatus.None) {
+                        for (let i = 0; i < 5; i++) {
+                            let cbKey = "AT+SUBRES=" + mqttCbKey[i];
+    
+                            if(line == cbKey) {
+                                handleIndex = i;
+                                topic = line.substr(10);
+                                mqttstatus =  MqttStatus.Topic;   
+                                break;
+                            } 
+                            // let cmp = mqttCbKey[i].compare(topic)
+                            // if (cmp == 0) {
+                            //     mqttCb[i](data)
+                            //     break;
+                            // }
+                        }
+                        if(mqttstatus != MqttStatus.Topic && line.indexOf("AT+SUBRES=") != -1){
+                            handleIndex = -1;
+                            topic = line.substr(10);
+                            mqttstatus =  MqttStatus.Topic;   
+                        }
+                    } else if(mqttstatus == MqttStatus.Topic){
+                        resp = line;
+                        mqttstatus = MqttStatus.Message;
+                    } else if (mqttstatus == MqttStatus.Message){
+                        if (line == "OK"){
+                            mqttstatus = MqttStatus.None;
+                            if(handleIndex != -1) {
+                                mqttCb[handleIndex](resp);
+                            }
+                            handleIndex = -1;
+                            if(this.mqttCbTopicData){
+                                this.mqttCbTopicData(topic,resp);
+                            }
+                            //handler(resp)
+                        }
+                    }
+                    //pause(10);
+                    pause(20);
+                } while (1);
+            });
+            
         }
 
         public setSpeechWkWord(wkword:number){

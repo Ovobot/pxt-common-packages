@@ -1,0 +1,14 @@
+{
+    "name": "xtroniot",
+    "description": "iot",
+    "files": [
+        "xtroniot.ts"
+    ],
+    "testFiles": [
+    ],
+    "public": true,
+    "dependencies": {
+        "core": "file:../core",
+        "esp32": "file:../esp32"
+    }
+}
