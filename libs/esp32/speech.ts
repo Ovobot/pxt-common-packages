@@ -65,8 +65,21 @@ namespace speech {
         }
     }
 
-    //% blockId=speech_set_lang block="set speech language  %lang"
+    /**
+     * Send at command.
+     * @param command the command string, eg: AT
+     */
+    //% blockId=speech_at_test block="send AT command  %command"
     //% weight=85 blockGap=12
+    export function testATCommand(command:string) {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            return c.sendATTest(command);
+        }
+    }
+
+    //% blockId=speech_set_lang block="set speech language  %lang"
+    //% weight=80 blockGap=12
     export function speechSelectLanguage(lang:LangTypes){
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -86,7 +99,7 @@ namespace speech {
     }
 
     //% blockId=speech_set_wakeupword block="set speech wake up  word %wkWord"
-    //% weight=85 blockGap=12
+    //% weight=75 blockGap=12
     export function speechSelectWakeupWord(wkWord:WAKEUPWORD){
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -95,58 +108,58 @@ namespace speech {
         }
     }
 
+    /**
+     * get wifi info
+     * @param ssid wifi ssid; eg: @PHICOMM_B8
+    */
+    //% blockId=speech_set_getrssi block="get wifi %ssid rssi strength"
+    //% weight=70 blockGap=12
+    export function getWifiRssiStrength(ssid:string ){
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            c.getRssi(ssid);
+        }
+    }
 
-    // function receiveWKNotice():boolean{
-    //     if(wkmode){
-    //         let c =  esp32.defaultController() as esp32.ATController;
-    //         if (c) {
-    //             return c.isWakeUp();
-    //         }
-    //         return false;
-    //     }
-    //     return false;
-    // }
-
-    // void onLightConditionChanged(LightCondition condition, Action handler) {
-    //     auto wlight = getWLight();
-    //     if (NULL == wlight) return;    
-    //     auto sensor = wlight->sensor;
-    
-    //     sensor.updateSample();
-    //     registerWithDal(DAL.DEVICE_ID_SERIAL, (int)condition, handler);
-    // }
+    //% blockId=speech_set_getWlapssidInfo block="get wlap info"
+    //% weight=70 blockGap=12
+    export function getWLapRssiStrength(){
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            c.getLAPOpt();
+        }
+    }
 
     //% blockId=speech_wakeup block="robot wake up?"
-    //% weight=85 blockGap=12
+    //% weight=65 blockGap=12
     export function receiveWKNotice(handler: () => void) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            //return c.isWakeUp();
-            //ser.serialDevice.onEvent(event, handler);
-            //c.atRegisterWithDal(CODAL_SERIAL_WAKEUP_RECEIVED,handler);
-            control.onEvent(DAL.DEVICE_ID_SERIAL, CODAL_SERIAL_WAKEUP_RECEIVED, handler);
-            //registerWithDal(DAL.DEVICE_ID_SERIAL, CODAL_SERIAL_WAKEUP_RECEIVED, handler);
-            control.runInBackground(() => {
-                while(1){
-                    //console.log("background read");
-                    if(wkmode && c.isWakeUp()){
-                        control.raiseEvent(DAL.DEVICE_ID_SERIAL, CODAL_SERIAL_WAKEUP_RECEIVED);
-                    }
-                    pause(20);
-                }
-            });
+            c.registerWakeupResponse(handler);
         }
     }
     
 
     //% blockId=speech_rec_result block="get speech recognition result"
-    //% weight=80 blockGap=12
-    export function speechRecognitionResult():string{
+    //% weight=84 blockGap=12
+    export function speechRecognitionResult(): void{
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            return c.getSpeechRecResult();
+            c.getSpeechRecResult();
         } 
-       return "";
+    }
+
+    /**
+     * On MQTT subscribe message callback install
+     * @param handler speech recognition result callback;
+    */
+    //% blockId=on_sr_result block="on speech recognition callback"
+    //% weight=82 draggableParameters=reporter
+    export function onSpeechRecognitionResult(handler: (result: string) => void): void {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            c.registerSRResponse(handler);
+        }
     }
 
     //% blockId=speech_rec_result_contain block="speech recognition result contain %keystr?"

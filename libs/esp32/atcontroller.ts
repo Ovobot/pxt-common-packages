@@ -5,11 +5,11 @@ namespace esp32 {
         Error
     }
 
-    export enum MqttStatus{
+    export enum ATAckState {
         None,
-        Topic,
-        Message,
-        OK
+        Head,
+        Content,
+        Tail
     }
 
     export interface ATResponse {
@@ -17,6 +17,8 @@ namespace esp32 {
         errorCode?: number;
         lines: string[];
     }
+
+
 
     /**
      * Controller for AT command set https://github.com/espressif/esp-at/blob/master/docs/ESP_AT_Commands_Set.md
@@ -26,16 +28,103 @@ namespace esp32 {
     export class ATController extends net.Controller {
         private prefix = "AT";
         private newLine = "\r\n";
-        private wifiConnResponse:ATResponse;
+        private wifiConnResponse:ATResponse = undefined;
         private currentSpeechRes = "";
         private mqttCbTopicData: (topic: string, data: string) => void = null;
-        private useMqttEvtLoop = false;
         private mWakeUp = false;
+        private atHandles:((response: ATResponse) => void)[] = [];
+        private ackState:ATAckState = ATAckState.None;
+        //private lines: string[] = [];
+        private atcmds:string[] = []; 
+        private status:ATStatus = ATStatus.None;
+        private errorCode: number = 0;
+        private srHandler: (data: string) => void = null;
+        private wkupHandler: () => void = null;
+        private mqttCb: ((data: string) => void)[] = [null, null, null, null, null, null, null, null];
+        private mqttCbCnt: number = 0;
+        private mqttCbKey: string[] = ['', '', '', '', '', '', '', ''];
+        private atready:boolean = true;
         constructor(private ser: serial.Serial) {
             super();
-            this.ser.serialDevice.setTxBufferSize(64);
-            this.ser.serialDevice.setRxBufferSize(128);
+            this.ser.serialDevice.setTxBufferSize(128);
+            this.ser.serialDevice.setRxBufferSize(200);
             this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
+            let line = "";
+            let lines: string[] = [];
+            let topic = '';
+            let handleIndex:number = -1;
+            let currentAckCmd:string = "";
+            this.ser.serialDevice.onDelimiterReceived(Delimiters.NewLine, function () {
+
+                line = this.ser.readNewLine();
+                console.log(line);
+                
+                if (line.length >= 2 && line.charAt(0) == 'A' && line.charAt(1) == 'T' && this.ackState == ATAckState.None) {
+                    this.ackState = ATAckState.Head;
+                    currentAckCmd = line;
+                } else if (this.ackState != ATAckState.None) {
+                    if (line == "OK") {
+                        this.status = ATStatus.Ok;
+                        this.ackState = ATAckState.Tail;
+                    } else if (line == "ERROR") {
+                        console.log('error');
+                        this.status = ATStatus.Error;
+                        this.ackState = ATAckState.Tail;
+                    } else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:") {
+                        console.log('error code');
+                        this.errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16);
+                    }  else if(line.length) {
+                        this.ackState = ATAckState.Content;
+                        lines.push(line);
+                    }     
+                }
+                if (this.ackState == ATAckState.Tail) {
+                    //call handles
+                    this.ackState = ATAckState.None;
+                    const ahs =  this.atHandles as ((response: ATResponse) => void)[];
+                    if (ahs.length) {
+                        const ah = ahs.shift();
+                        ah({ status: this.status, errorCode: this.errorCode, lines: lines });
+                    }
+                    if (currentAckCmd == 'AT+SPEECHRES' && this.srHandler) {
+                        let result = lines[0];
+                        if (result != undefined) {
+                            this.currentSpeechRes = result;
+                            this.srHandler(result);
+                        }
+                    }
+                    if (currentAckCmd == 'AT+WAKE' && this.wkupHandler) {
+                        this.wkupHandler();
+                    }
+                    if (currentAckCmd.indexOf("AT+SUBRES=") != -1) {
+                        topic = currentAckCmd.substr(10);
+                        const mqcbkey = this.mqttCbKey as string[];
+                        for (let i = 0; i < mqcbkey.length; i++) {
+                            let cbKey = mqcbkey[i];
+                            if(topic == cbKey) {
+                                handleIndex = i;
+                                break;
+                            } 
+                        }
+
+                        if(handleIndex != -1) {
+                            const mqCb =  this.mqttCb as ((data: string) => void)[];
+                            mqCb[handleIndex](lines[0]);
+                        }
+                        if(this.mqttCbTopicData){
+                            const mqCb =  this.mqttCbTopicData as  (topic: string, data: string) => void
+                            mqCb(topic,lines[0]);
+                        }
+                    }
+                    this.atready = true;
+                    handleIndex = -1;
+                    lines = [];
+                    line = "";
+                    this.status = ATStatus.None;
+                    this.errorCode = 0;
+                }
+                
+            });
         }
 
         parseIntRadix(s: string, base?: number) {
@@ -78,8 +167,50 @@ namespace esp32 {
          * Sends and receives an AT command
          * @param command command name
          */
-        private sendAT(command: string, args?: any[]): ATResponse {
-            // send command
+        private sendAT(command: string, args?: any[]) :ATResponse{
+            control.runInBackground(() => {
+                // send command
+                let txt = this.prefix;
+                // add command
+                if (command)
+                    txt += "+" + command;
+                // filter out undinfed from the back
+                while (args && args.length && args[args.length - 1] === undefined)
+                    args.pop();
+                if (args && args.length > 0) {
+                    txt += "=" + args.map(arg => "\""  + arg + "\"").join(",");
+                }
+                txt += this.newLine;
+                // send over
+                this.ser.writeString(txt);
+            });
+         // read output
+         let status = ATStatus.None;
+         let errorCode: number = 0;
+         let line = "";
+         let lines: string[] = [];
+            // control.runInBackground(() => {
+            //     do {
+            //         line = this.ser.readNewLine();
+            //         console.log(line);
+            //         if (line == "OK")
+            //             status = ATStatus.Ok;
+            //         // else if (line == "ERROR")
+            //         //     status = ATStatus.Error;
+            //         // else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
+            //         //     errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16); //parseInt(line.substr("ERR CODE:".length + 2), 16)
+            //         else if (!line.length) continue; // keep reading
+            //         else if(line.length) {
+            //             lines.push(line);
+            //         }
+            //     } while (status == ATStatus.None);
+            // });
+
+
+            return { status: status, errorCode: errorCode, lines: lines };
+        }
+
+        private sendNewAT(command: string, args?: any[], callback?: (response: ATResponse) => void) {
             let txt = this.prefix;
             // add command
             if (command)
@@ -90,34 +221,27 @@ namespace esp32 {
             if (args && args.length > 0) {
                 txt += "=" + args.map(arg => "\""  + arg + "\"").join(",");
             }
-            txt += this.newLine;
-            // send over
-            this.ser.writeString(txt);
-            // read output
-            let status = ATStatus.None;
-            let errorCode: number = 0;
-            let line = "";
-            const lines: string[] = [];
-            //control.runInBackground(() => {
-                do {
-                    line = this.ser.readNewLine();
-                    //this.ser.writeString(line);
-                    console.log(line)
-                    if (line == "OK")
-                        status = ATStatus.Ok;
-                    else if (line == "ERROR")
-                        status = ATStatus.Error;
-                    else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
-                        errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16); //parseInt(line.substr("ERR CODE:".length + 2), 16)
-                    else if (!line.length) continue; // keep reading
-                    else lines.push(line);
-                    //pause(10);
-                    pause(20);
-                } while (status == ATStatus.None);
-            //});
-
-
-            return { status: status, errorCode: errorCode, lines: lines };
+            txt += this.newLine;            
+            if (callback) {
+                this.atHandles.push(callback);
+                this.atcmds.unshift(txt);
+            } else {
+                this.atcmds.push(txt);
+            }
+            
+            control.runInBackground(() => {
+                // send command
+                while(this.atcmds.length) {
+                    if (this.atready) {
+                        this.atready = false;
+                        const cmd = this.atcmds.shift();
+                        console.log(cmd);
+                        // send over
+                        this.ser.writeString(cmd);
+                    }
+                    pause(10);
+                }
+            });
         }
 
         private parseNumber(r : ATResponse): number {
@@ -163,18 +287,8 @@ namespace esp32 {
             return -1;
         }
 
-        public isWakeUp():boolean{
-            let wake = this.mWakeUp;
-            if(this.useMqttEvtLoop){
-                this.mWakeUp = false;
-                return wake;
-            } else {
-                let line = this.ser.readNewLine();
-                console.log("recv->" + line);
-                if (line == "OK") return true;
-                else return false;
-            }
-
+        public sendATTest(command:string) {
+            this.sendNewAT(command);
         }
 
         public atRegisterWithDal(event: number, handler: () => void){
@@ -189,112 +303,86 @@ namespace esp32 {
         }
 
         public wifiConnect(ssid:string,password:string){
-            const r = this.sendAT("CWMODE=1");
-            if(r.status == ATStatus.Ok) {
-               this.wifiConnResponse = this.sendAT("CWJAP",[ssid,password]); 
-            }
+                this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
+                    if(resp.status == ATStatus.Ok) {
+                        this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
+                            console.log(resp.lines);
+                            this.wifiConnResponse = resp;
+                        }); 
+                    }
+                });
         }
 
         public setSpeechTime(time:number) {
             let r =  Math.constrain(time, 1, 4);
-            this.sendAT("SPEECH="+time);
+            this.sendNewAT("SPEECH="+time);
             //pause(time * 1000);
         }
 
         public setHost(host:string,client:string) {
-            this.wifiConnResponse = this.sendAT("MQTT",[host,client]); 
+            this.sendNewAT("MQTT",[host,client]); 
         }
 
         public pubTopicMessage(topic: string, message: string) {
-            this.wifiConnResponse = this.sendAT("PUB",[topic,message]); 
+            this.sendNewAT("PUB",[topic,message]); 
         }
 
         public subTopic(topic:string) {
-            this.wifiConnResponse = this.sendAT("SUB",[topic]); 
+            this.sendNewAT("SUB",[topic]); 
         }
 
         public registerMqttSubResponse(handler: (topic: string, message: string) => void){
             this.mqttCbTopicData = handler;
         }
 
-        public onsubResponse(mqttCb:((data: string) => void)[],mqttCbKey:string[]){
-            let line = "";
-            let mqttstatus =  MqttStatus.None;
-            let resp = "";
-            let handleIndex = -1;
-            let topic = "";
-            this.useMqttEvtLoop = true;
-            control.runInBackground(() => {
-                do {
-                    line = this.ser.readNewLine();
-                    //this.ser.writeString(line);
-                    if(line == "AT+WAKE"){
-                        this.mWakeUp = true;
-                    } else if (mqttstatus == MqttStatus.None) {
-                        for (let i = 0; i < 5; i++) {
-                            let cbKey = "AT+SUBRES=" + mqttCbKey[i];
-    
-                            if(line == cbKey) {
-                                handleIndex = i;
-                                topic = line.substr(10);
-                                mqttstatus =  MqttStatus.Topic;   
-                                break;
-                            } 
-                            // let cmp = mqttCbKey[i].compare(topic)
-                            // if (cmp == 0) {
-                            //     mqttCb[i](data)
-                            //     break;
-                            // }
-                        }
-                        if(mqttstatus != MqttStatus.Topic && line.indexOf("AT+SUBRES=") != -1){
-                            handleIndex = -1;
-                            topic = line.substr(10);
-                            mqttstatus =  MqttStatus.Topic;   
-                        }
-                    } else if(mqttstatus == MqttStatus.Topic){
-                        resp = line;
-                        mqttstatus = MqttStatus.Message;
-                    } else if (mqttstatus == MqttStatus.Message){
-                        if (line == "OK"){
-                            mqttstatus = MqttStatus.None;
-                            if(handleIndex != -1) {
-                                mqttCb[handleIndex](resp);
-                            }
-                            handleIndex = -1;
-                            if(this.mqttCbTopicData){
-                                this.mqttCbTopicData(topic,resp);
-                            }
-                            //handler(resp)
-                        }
-                    }
-                    //pause(10);
-                    pause(20);
-                } while (1);
-            });
-            
+        public registerSRResponse(handler: (message: string) => void) {
+            this.srHandler = handler;
+        }
+
+        public registerWakeupResponse(handler: () => void) {
+            this.wkupHandler = handler;
+        }
+        
+
+        public onsubResponse(topic: string, handler: (message: string) => void){
+            if (this.mqttCbCnt >= 8) return;
+            this.mqttCb[this.mqttCbCnt] = handler;
+            this.mqttCbKey[this.mqttCbCnt] = topic;
+            this.mqttCbCnt++;
         }
 
         public setSpeechWkWord(wkword:number){
-            this.sendAT("AT+SPEECHWAKE="+wkword);
+            this.sendNewAT("AT+SPEECHWAKE="+wkword);
         }
 
         public setSpeechLang(lang:string){
-            this.sendAT("AT+SPEECHLANG="+lang);
+            this.sendNewAT("AT+SPEECHLANG="+lang);
         }
 
-        public getSpeechRecResult():string{
-            const r = this.sendAT("SPEECHRES");
-            if(r.status == ATStatus.Ok) {
-                const res = r.lines[1];
-                this.currentSpeechRes = res;
-                return res; 
-            }
-            this.currentSpeechRes = "";
-            return "";
+        public getSpeechRecResult() {
+            this.sendNewAT("SPEECHRES");
         }
 
         public isSpeechResContain(str:string):boolean{
             return this.currentSpeechRes.indexOf(str) > -1;
+        }
+
+
+        public getRssi(ssid:string){
+            this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
+                if(resp.status == ATStatus.Ok) {
+                    this.sendNewAT("CWLAP",[ssid],function(resp:ATResponse) {
+                        console.log(resp.lines);
+                    }); 
+                }
+            });
+            
+        }
+
+        public getLAPOpt() {
+            this.sendNewAT("CWLAPOPT",[1,6],function(resp:ATResponse) {
+                console.log(resp.lines);
+            });
         }
 
         public socketWrite(socket_num: number, buffer: Buffer): void {
