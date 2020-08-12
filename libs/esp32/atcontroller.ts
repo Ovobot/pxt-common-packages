@@ -34,7 +34,6 @@ namespace esp32 {
         private mWakeUp = false;
         private atHandles:((response: ATResponse) => void)[] = [];
         private ackState:ATAckState = ATAckState.None;
-        //private lines: string[] = [];
         private atcmds:string[] = []; 
         private status:ATStatus = ATStatus.None;
         private errorCode: number = 0;

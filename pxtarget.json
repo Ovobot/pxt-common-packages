@@ -53,6 +53,7 @@
         "libs/game",
         "libs/storyboard",
         "libs/rotary-encoder",
-        "libs/palette"
+        "libs/palette",
+        "libs/extsensor"
     ]
 }

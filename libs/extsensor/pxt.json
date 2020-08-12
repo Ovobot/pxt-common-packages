@@ -1,0 +1,13 @@
+{
+    "name": "extsensor",
+    "description": "xtronpro ext sensors",
+    "files": [
+        "extsensor.ts"
+    ],
+    "testFiles": [
+    ],
+    "public": true,
+    "dependencies": {
+        "core": "file:../core"
+    }
+}
