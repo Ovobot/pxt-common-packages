@@ -4,22 +4,6 @@ using namespace std;
 
 namespace pxt {
 
-#ifndef PXT_GC
-TValue incr(TValue e) {
-    if (isRefCounted(e)) {
-        getVTable((RefObject *)e);
-        ((RefObject *)e)->ref();
-    }
-    return e;
-}
-
-void decr(TValue e) {
-    if (isRefCounted(e)) {
-        ((RefObject *)e)->unref();
-    }
-}
-#endif
-
 Action mkAction(int totallen, RefAction *act) {
     check(getVTable(act)->classNo == BuiltInType::RefAction, PANIC_INVALID_BINARY_HEADER, 1);
 #ifdef PXT_VM
@@ -65,9 +49,7 @@ TValue RefRecord::ld(int idx) {
 TValue RefRecord::ldref(int idx) {
     // DMESG("LD %p len=%d reflen=%d idx=%d", this, len, reflen, idx);
     // intcheck(0 <= idx && idx < reflen, PANIC_OUT_OF_BOUNDS, 2);
-    TValue tmp = fields[idx];
-    incr(tmp);
-    return tmp;
+    return fields[idx];
 }
 
 void RefRecord::st(int idx, TValue v) {
@@ -78,15 +60,11 @@ void RefRecord::st(int idx, TValue v) {
 void RefRecord::stref(int idx, TValue v) {
     // DMESG("ST %p len=%d reflen=%d idx=%d", this, len, reflen, idx);
     // intcheck(0 <= idx && idx < reflen, PANIC_OUT_OF_BOUNDS, 4);
-    decr(fields[idx]);
     fields[idx] = v;
 }
 
 void RefObject::destroyVT() {
     ((RefObjectMethod)getVTable(this)->methods[0])(this);
-#ifndef PXT_GC
-    free(this);
-#endif
 }
 
 //%
@@ -98,19 +76,10 @@ void RefObject::printVT() {
     ((RefObjectMethod)getVTable(this)->methods[1])(this);
 }
 
-void RefRecord_destroy(RefRecord *r) {
-#ifndef PXT_GC
-    VTable *tbl = getVTable(r);
-    int len = (tbl->numbytes - sizeof(RefRecord)) >> 2;
-    for (int i = 0; i < len; ++i) {
-        decr(r->fields[i]);
-        r->fields[i] = 0;
-    }
-#endif
-}
+void RefRecord_destroy(RefRecord *) {}
 
 void RefRecord_print(RefRecord *r) {
-    DMESG("RefRecord %p r=%d size=%d bytes", r, REFCNT(r), getVTable(r)->numbytes);
+    DMESG("RefRecord %p size=%d bytes", r, getVTable(r)->numbytes);
 }
 
 void Segment::set(unsigned i, TValue value) {
@@ -330,18 +299,11 @@ void Segment::destroy() {
 PXT_VTABLE_CTOR(RefCollection) {}
 
 void RefCollection::destroy(RefCollection *t) {
-#ifndef PXT_GC
-    auto data = t->head.getData();
-    auto len = t->head.getLength();
-    for (unsigned i = 0; i < len; i++) {
-        decr(data[i]);
-    }
-#endif
     t->head.destroy();
 }
 
 void RefCollection::print(RefCollection *t) {
-    DMESG("RefCollection %p r=%d size=%d", t, REFCNT(t), t->head.getLength());
+    DMESG("RefCollection %p size=%d", t, t->head.getLength());
     t->head.print();
 }
 
@@ -349,22 +311,15 @@ PXT_VTABLE(RefAction, ValType::Function)
 RefAction::RefAction() : PXT_VTABLE_INIT(RefAction) {}
 
 // fields[] contain captured locals
-void RefAction::destroy(RefAction *t) {
-#ifndef PXT_GC
-    for (int i = 0; i < t->len; ++i) {
-        decr(t->fields[i]);
-        t->fields[i] = 0;
-    }
-#endif
-}
+void RefAction::destroy(RefAction *t) {}
 
 void RefAction::print(RefAction *t) {
 #ifdef PXT_VM
     DMESG("RefAction %p pc=%X size=%d", t,
           (const uint8_t *)t->func - (const uint8_t *)vmImg->dataStart, t->len);
 #else
-    DMESG("RefAction %p r=%d pc=%X size=%d", t, REFCNT(t),
-          (const uint8_t *)t->func - (const uint8_t *)bytecode, t->len);
+    DMESG("RefAction %p pc=%X size=%d", t, (const uint8_t *)t->func - (const uint8_t *)bytecode,
+          t->len);
 #endif
 }
 
@@ -373,7 +328,7 @@ PXT_VTABLE_CTOR(RefRefLocal) {
 }
 
 void RefRefLocal::print(RefRefLocal *t) {
-    DMESG("RefRefLocal %p r=%d v=%p", t, REFCNT(t), (void *)t->v);
+    DMESG("RefRefLocal %p v=%p", t, (void *)t->v);
 }
 
 void RefRefLocal::destroy(RefRefLocal *t) {
@@ -383,18 +338,6 @@ void RefRefLocal::destroy(RefRefLocal *t) {
 PXT_VTABLE_CTOR(RefMap) {}
 
 void RefMap::destroy(RefMap *t) {
-#ifndef PXT_GC
-    auto len = t->values.getLength();
-    auto values = t->values.getData();
-    auto keys = t->keys.getData();
-    intcheck(t->keys.getLength() == len, PANIC_SIZE, 101);
-    for (unsigned i = 0; i < len; ++i) {
-        decr(values[i]);
-        values[i] = nullptr;
-        decr(keys[i]);
-        keys[i] = nullptr;
-    }
-#endif
     t->keys.destroy();
     t->values.destroy();
 }
@@ -422,7 +365,7 @@ int RefMap::findIdx(String key) {
 }
 
 void RefMap::print(RefMap *t) {
-    DMESG("RefMap %p r=%d size=%d", t, REFCNT(t), t->keys.getLength());
+    DMESG("RefMap %p size=%d", t, t->keys.getLength());
 }
 
 void debugMemLeaks() {}
@@ -481,6 +424,11 @@ String programName() {
 #endif
 
 #ifndef PXT_VM
+void variantNotSupported(const char *v) {
+    DMESG("variant not supported: %s", v);
+    target_panic(PANIC_VARIANT_NOT_SUPPORTED);
+}
+
 void exec_binary(unsigned *pc) {
     // XXX re-enable once the calibration code is fixed and [editor/embedded.ts]
     // properly prepends a call to [internal_main].
@@ -493,6 +441,12 @@ void exec_binary(unsigned *pc) {
     checkStr(ver == 0x4210, ":( Bad runtime version");
 
     bytecode = *((uint16_t **)pc++); // the actual bytecode is here
+
+    if (((uint32_t *)bytecode)[0] == 0x923B8E71) {
+        variantNotSupported((const char *)bytecode + 16);
+        return;
+    }
+
     globals = (TValue *)app_alloc(sizeof(TValue) * getNumGlobals());
     memset(globals, 0, sizeof(TValue) * getNumGlobals());
 
@@ -547,8 +501,6 @@ RefCollection *keysOf(TValue v) {
     r->setLength(len);
     auto dst = r->getData();
     memcpy(dst, rm->keys.getData(), len * sizeof(TValue));
-    for (unsigned i = 0; i < len; ++i)
-        incr(dst[i]);
     unregisterGCObj(r);
     return r;
 }

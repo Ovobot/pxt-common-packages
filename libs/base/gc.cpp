@@ -101,15 +101,6 @@ unsigned RefRecord_gcsize(RefRecord *r) {
     return BYTES_TO_WORDS(tbl->numbytes);
 }
 
-#ifndef PXT_GC
-// dummies, to make the linker happy
-void popThreadContext(ThreadContext *ctx) {}
-ThreadContext *pushThreadContext(void *sp, void *endSP) {
-    return NULL;
-}
-void RefRecord_scan(RefRecord *r) {}
-#else
-
 #ifdef PXT_GC_THREAD_LIST
 ThreadContext *threadContexts;
 #endif
@@ -904,7 +895,5 @@ unsigned RefRefLocal::gcsize(RefRefLocal *t) {
 unsigned RefMap::gcsize(RefMap *t) {
     return SIZE(0);
 }
-
-#endif
 
 } // namespace pxt
