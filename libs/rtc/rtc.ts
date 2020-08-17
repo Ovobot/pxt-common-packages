@@ -306,30 +306,12 @@ namespace rtcModules {
     //% shim=rtcModules::getFullYear
     export declare function getFullYear():number;
 
-    // function requestUpdate(){
-    //     // pins.i2cWriteNumber(RTC_TYPE_DS1339, REG_DS1339_SECONDS, NumberFormat.UInt8LE)
-    //     // const buf = pins.i2cReadBuffer(RTC_TYPE_DS1339, 7);
-    //     // for(let i = 0; i < 7; ++i) {
-    //     //     rtc_bcd[i] = buf.getNumber(NumberFormat.UInt8LE, i);
-    //     // }
-
-    //     //const d: number = Date.now();
-
-    //     // rtc_bcd[0] = bin2bcd(d.getSeconds());
-    //     // rtc_bcd[1] = bin2bcd(d.getMinutes());
-    //     // rtc_bcd[2] = bin2bcd(d.getHours());
-    //     // rtc_bcd[3] = bin2bcd(d.getDay());
-    //     // rtc_bcd[4] = bin2bcd(d.getDate());   
-    //     // rtc_bcd[5] = bin2bcd(d.getMonth());  
-    //     // rtc_bcd[6] = bin2bcd(d.getFullYear());   
-
-    // }
 
     /**
      * TODO: start rtc timer.
      */
     //% group="Time"
-    //% weight=50
+    //% weight=60
     //% blockId=rtc_init block="start rtc timer"
     export function startRTCTimer() {
         let timer = 0;
@@ -341,13 +323,7 @@ namespace rtcModules {
                 requestUpdate();
                 let timerstate: TimerState = game.currentScene().data[timerNamespace];
                 if(timerstate){
-                    
                     timerstate.timers.forEach(timer => timer.update());
-
-                    // let seconds = readSeconds()
-                    // secondsSp[1].setImage(numThemeMap[readDigit(DigitsIndex.Units, seconds)])
-                    // secondsSp[0].setImage(numThemeMap[readDigit(DigitsIndex.Tens, seconds)])
-                    // displaySecondsSpriteAtPosition(secondsSp[0].left,secondsSp[0].top,numspace)
                 }
             }
         });
@@ -361,10 +337,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readSeconds(): number {
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_SECONDS, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[0];
-        // let data = (res & 0x7f);
-        // let seconds = (data>>4)*10 + (data&0x0f);
         return getSeconds();
     }
 
@@ -375,10 +347,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readMinutes(): number {
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_MINUTES, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[1];
-        // let data = (res & 0x7f);
-        // let minutes = (data>>4)*10 + (data&0x0f);
         return getMinutes();
     }
 
@@ -389,21 +357,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readHours(): number {
-        // let minutes = 0;
-        // //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_HOURS, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[2];
-        // let data = (res & 0x7f);
-        // let flag12 =  data >> 6;
-        // if(flag12){
-
-        //     let getAMPM = (data &= (1<<5));
-        //     let data2 = (data & 0x1f);
-        //     minutes = (data2>>4)*10 + (data&0x0f);
-        // } else {
-        //     let data2 = (data & 0x3f);
-        //     minutes = (data2>>5)*20 + ((data & 0x1f)>>4)*10 + (data2&0x0f);
-        // }
-        // return minutes;
         return getHours();
     }
 
@@ -414,9 +367,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readDaysofWeek():number {
-        //let day = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_DAY, NumberFormat.UInt8LE);
-        // let day = rtc_bcd[3];
-        // return day;
         return getDay();
     }
 
@@ -427,11 +377,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readDate():number {
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_DATE, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[4];
-        // let data = (res & 0x3f);
-        // let date = (data>>4)*10 + (data&0x0f);
-        // return date;
         return getDate();
     }
 
@@ -442,11 +387,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readMonths():number {
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_MONTH, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[5];
-        // let data = (res & 0x1f);
-        // let month = (data>>4)*10 + (data&0x0f);
-        // return month;
         return getMonth();
     }
 
@@ -457,11 +397,6 @@ namespace rtcModules {
     //% block weight=50
     //% blockHidden=1
     export function readYear():number {
-        //let res = pins.i2cReadRegister(RTC_TYPE_DS1339, REG_DS1339_YEAR, NumberFormat.UInt8LE);
-        // let res = rtc_bcd[6];
-        // //let year = 2000 + (res >> 4) * 10 + (res & 0x0f);
-        // let year = (res >> 4) * 10 + (res & 0x0f);
-        // return year;
         return getFullYear();
     }
 
@@ -599,7 +534,7 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
     //% group="Create"
     //% blockId=separator_component_create block="create separator %type "
     //% blockSetVariable=mySeparator
-    //% weight=99
+    //% weight=98
     export function createSeparatorComponent(type: SeparatorType = SeparatorType.COLON): SeparatorComponent {
         return new SeparatorComponent(type)
     }
@@ -706,43 +641,6 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
     //% fixedInstances blockId=timer_theme block="theme %v"
     export class ThemeIcon {
         public icons:Image[] = []
-        // constructor(icon0:any) {
-        //     this.icons = []
-        //     this.icons.push(icon0)
-        //     // this.icons.push(icon1)
-        //     // this.icons.push(icon2)
-        //     // this.icons.push(icon3)
-        //     // this.icons.push(icon4)
-        //     // this.icons.push(icon5)
-        //     // this.icons.push(icon6)
-        //     // this.icons.push(icon7)
-        //     // this.icons.push(icon8)
-        //     // this.icons.push(icon9)
-
-        //     console.log("hehe");
-
-        //     let tmpicon = img`
-        //     . f f f f f f . 
-        //     f f 1 1 1 1 f f 
-        //     f 1 1 1 1 1 1 f 
-        //     f 1 1 f f 1 1 f 
-        //     f 1 1 f 1 1 1 f 
-        //     f 1 1 1 f 1 1 f 
-        //     f 1 1 f f 1 1 f 
-        //     f 1 1 1 1 1 1 f 
-        //     f f 1 1 1 1 f f 
-        //     . f f f f f f . 
-        // `;
-
-        //     console.log(icon0);
-
-        //     console.log(tmpicon);
-
-
-        //     console.log("array");
-
-        //     console.log(this.icons);
-        // }
 
         constructor(public v: Image[]) {
         }

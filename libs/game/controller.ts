@@ -331,6 +331,14 @@ namespace controller {
         }
 
         /**
+         * Get the 'Back' button
+         */
+        //%
+        get C() {
+            return this.button(8);
+        }        
+
+        /**
          * Get the 'Menu' button
          */
         //%

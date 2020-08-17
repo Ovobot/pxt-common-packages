@@ -4,7 +4,7 @@
 #include "I2C.h"
 #include "CoordinateSystem.h"
 #include "Accelerometer.h"
-#include "count_steps.h"
+//#include "count_steps.h"
 
 enum class Dimension {
     //% block=x
@@ -113,7 +113,7 @@ enum class Gesture {
 // defined in accelhw.cpp
 namespace pxt {
 codal::Accelerometer *getAccelerometer();
-int8_t   data[NUM_TUPLES*3];
+// int8_t   data[NUM_TUPLES*3];
 int currentStep = 0;
 int accIndex = 0;
 float  scale_factor = 55.3293;
