@@ -744,10 +744,8 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
                 `, SpriteKind.Player)
                 sp.setImage(rtcModules.THEME1_NUM_0)    
                 this.timesps.push(sp)
-                x = sp.x;
-                y = sp.y;
             }
-            this.displayTimerAtPosition(x,y);
+            this.displayTimerAtPosition( (screen.width >> 1), (screen.height >> 1));
             let timerstate: TimerState = game.currentScene().data[timerNamespace];
 
             // Register animation updates to fire when frames are rendered
@@ -759,6 +757,23 @@ export function drawDigit(digit: Image, value: number, thickness: SegmentStyle, 
 
             timerstate.timers.push(this);
 
+        }
+
+        /**
+         * Set a timer component flag
+         */
+        //% group="Basic"
+        //% weight=30
+        //% blockId=timercpsetsetflag block="set %rtcModules(myTimerComponent) invisible %on=toggleOnOff"
+        setFlag(on: boolean) {
+            // if (on) this.flags |= flag
+            // else this.flags = ~(~this.flags | flag);
+
+            for(let i = 0; i < this.timesps.length; i++){
+                let sp =  this.timesps[i];
+                if (on) sp.flags |= SpriteFlag.Invisible
+                else sp.flags = ~(~sp.flags | SpriteFlag.Invisible);
+            }
         }
 
         /**

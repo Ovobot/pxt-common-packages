@@ -45,21 +45,7 @@ enum LedIndex {
     //% block="4"
     L4,
     //% block="5"
-    L5,
-    //% block="6"
-    L6,
-    //% block="7"
-    L7,
-    //% block="8"
-    L8,
-    //% block="9"
-    L9,
-    //% block="10"
-    L10,
-    //% block="11"
-    L11,
-    //% block="12"
-    L12  
+    L5
 }
 
 enum LineIndex {
@@ -108,6 +94,7 @@ namespace ovobotModules {
     const LINE_ADDRESS = 0x51
     const COLOR_ADDRESS = 0x40
     const lowBright = 8
+    const RGB_ADDRESS = 0x44
     const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
     let tempDevEnable = [false,false,false,false]
     function sonicEnable() {
@@ -196,25 +183,24 @@ namespace ovobotModules {
      */
     //% blockId=control_leds_output block="control neopixels %index color %color"
     //% weight=65
-    //% deprecated=true
     export function controlNeopixels(index: LedIndex, color: Color) { 
-        let buf = pins.createBuffer(38);
+        let buf = pins.createBuffer(20);
         let startPos;
         buf[0] = 0;
         buf[1] = 1;
         if (index == 0) {
-            for (let i = 2; i < 36; i += 3) {
+            for (let i = 2; i < 18; i += 3) {
                 buf[i] = ((selectColors[color] >> 8) & 0xff) / lowBright;
                 buf[i + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
                 buf[i + 2] = (selectColors[color] & 0xff) / lowBright;
             }
         } else { 
-            startPos = 2 + 3 * (index - 1);
+            startPos = 2 + 3 * index;
             buf[startPos] = ((selectColors[color] >> 8) & 0xff) / lowBright;
             buf[startPos + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
             buf[startPos + 2] = (selectColors[color] & 0xff) / lowBright;
         }
-        pins.i2cWriteBuffer(LED_ADDRESS, buf);
+        pins.i2cWriteBuffer(RGB_ADDRESS, buf);
     }
 
     /**

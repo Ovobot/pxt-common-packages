@@ -351,11 +351,11 @@ namespace esp32 {
         }
 
         public setSpeechWkWord(wkword:number){
-            this.sendNewAT("AT+SPEECHWAKE="+wkword);
+            this.sendNewAT("SPEECHWAKE="+wkword);
         }
 
         public setSpeechLang(lang:string){
-            this.sendNewAT("AT+SPEECHLANG="+lang);
+            this.sendNewAT("SPEECHLANG",[lang]);
         }
 
         public getSpeechRecResult() {

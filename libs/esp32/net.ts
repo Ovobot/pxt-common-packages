@@ -4,7 +4,12 @@ namespace esp32 {
         // cached
         if (_defaultController) return _defaultController;
 
-        
+        // // look for ESP32 over SPI pins
+        const cs = pins.pinByCfg(DAL.CFG_PIN_WIFI_CS)
+        if (cs) {
+            cs.digitalWrite(true);
+        }
+        // pause(1000);
         // look for ESP32 over serial pins
         const rx = pins.pinByCfg(DAL.CFG_PIN_RX);
         const tx = pins.pinByCfg(DAL.CFG_PIN_TX);
@@ -15,8 +20,7 @@ namespace esp32 {
         }
         
 
-        // // look for ESP32 over SPI pins
-        // const cs = pins.pinByCfg(DAL.CFG_PIN_WIFI_CS)
+
         // const busy = pins.pinByCfg(DAL.CFG_PIN_WIFI_BUSY);
         // const reset = pins.pinByCfg(DAL.CFG_PIN_WIFI_RESET);
         // const gpio0 = pins.pinByCfg(DAL.CFG_PIN_WIFI_GPIO0); // optional

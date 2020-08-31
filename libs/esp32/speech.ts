@@ -162,9 +162,10 @@ namespace speech {
         }
     }
 
-    //% blockId=speech_rec_result_contain block="speech recognition result contain %keystr?"
+    //% blockId=speech_rec_result_contain block="speech recognition $res=variables_get(result) contain %keystr?"
     //% weight=78 blockGap=12
-    export function speechRecognitionResultContainValue(keystr:string):boolean{
+    
+    export function speechRecognitionResultContainValue(res: string, keystr:string):boolean{
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             return c.isSpeechResContain(keystr);
