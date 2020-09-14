@@ -4,11 +4,7 @@ namespace esp32 {
         // cached
         if (_defaultController) return _defaultController;
 
-        // // look for ESP32 over SPI pins
-        const cs = pins.pinByCfg(DAL.CFG_PIN_WIFI_CS)
-        if (cs) {
-            cs.digitalWrite(true);
-        }
+
         // pause(1000);
         // look for ESP32 over serial pins
         const rx = pins.pinByCfg(DAL.CFG_PIN_RX);
@@ -16,7 +12,18 @@ namespace esp32 {
 
         if (rx && tx) {
             const dev = serial.createSerial(tx,rx,DAL.DEVICE_ID_SERIAL);
-            return _defaultController = new ATController(dev);
+            // look for ESP32 over SPI pins
+            const cs = pins.pinByCfg(DAL.CFG_PIN_WIFI_CS)
+            if (cs) {
+                cs.digitalWrite(true);
+            }
+            //pause(2000);
+             _defaultController = new ATController(dev);
+             let c = _defaultController as esp32.ATController;
+            while(!c.isEsp32Ready){
+                pause(10);
+            }
+            return _defaultController;
         }
         
 

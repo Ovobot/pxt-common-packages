@@ -27,6 +27,18 @@ namespace speech {
         OVO
     }
 
+    export enum VOICEPERSON {
+        //% block="FEMALESTD"
+        FEMALESTD,
+        //% block="MALESTD"
+        MALESTD,
+        //% block="MALEMAG"
+        MALEMAG = 3,
+        //% block="CHILDSTD"
+        CHILDSTD = 4
+
+    }
+
     let wkmode:boolean = false;
 
     
@@ -49,6 +61,35 @@ namespace speech {
         }
         return false;
     }
+
+    //% blockId=speech_esp32_cs block="ESP32 enable  %on=toggleOnOff"
+    //% weight=90 blockGap=12
+    export function disableESP32(on: boolean) {
+        // // look for ESP32 over SPI pins
+        const cs = pins.pinByCfg(DAL.CFG_PIN_WIFI_CS)
+        if (cs) {
+            cs.digitalWrite(on);
+        }
+    }
+
+    //% blockId=speech_esp32_voicesay block="voice say  %content"
+    //% weight=90 blockGap=12
+    export function voiceSay(content:string) {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            return c.setVoiceContent(content);
+        }        
+    }
+
+  
+    //% blockId=speech_esp32_voiceperson block="set voice person  %person"
+    //% weight=91 blockGap=12
+    export function voicePerson(person:VOICEPERSON) {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            return c.setVoicePerson(person);
+        }        
+    }  
 
     /**
      * Sets speech time.

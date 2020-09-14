@@ -645,25 +645,25 @@ namespace animation {
     }
 
 
-    // //% blockId=animation_editor block="%frames"
-    // //% shim=TD_ID
-    // //% frames.fieldEditor="animation"
-    // //% frames.fieldOptions.decompileLiterals="true"
-    // //% frames.fieldOptions.filter="!tile !dialog !background"
-    // //% group="Animate" duplicateShadowOnDrag
-    // export function _animationFrames(frames: Image[]) {
-    //     return frames
-    // }
-
-    //frames: animation.AnimateFrame
-
     //% blockId=animation_editor block="%frames"
     //% shim=TD_ID
     //% frames.fieldEditor="animation"
     //% frames.fieldOptions.decompileLiterals="true"
     //% frames.fieldOptions.filter="!tile !dialog !background"
     //% group="Animate" duplicateShadowOnDrag
-    export function _animationDefaultFrames(frames: animation.AnimateFrame) {
-        return frames.images;
+    export function _animationFrames(frames: Image[]) {
+        return frames
     }
+
+    // //frames: animation.AnimateFrame
+
+    // //% blockId=animation_editor block="%frames"
+    // //% shim=TD_ID
+    // //% frames.fieldEditor="animation"
+    // //% frames.fieldOptions.decompileLiterals="true"
+    // //% frames.fieldOptions.filter="!tile !dialog !background"
+    // //% group="Animate" duplicateShadowOnDrag
+    // export function _animationDefaultFrames(frames: animation.AnimateFrame) {
+    //     return frames.images;
+    // }
 }

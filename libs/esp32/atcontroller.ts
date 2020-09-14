@@ -43,9 +43,12 @@ namespace esp32 {
         private mqttCbCnt: number = 0;
         private mqttCbKey: string[] = ['', '', '', '', '', '', '', ''];
         private atready:boolean = true;
+        private voiceCmdNow:boolean = false;
+        private esp32Ready:boolean = false;
+        //private voiceReg = /AT+VOICE=/;
         constructor(private ser: serial.Serial) {
             super();
-            this.ser.serialDevice.setTxBufferSize(128);
+            this.ser.serialDevice.setTxBufferSize(150);
             this.ser.serialDevice.setRxBufferSize(200);
             this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
             let line = "";
@@ -57,11 +60,28 @@ namespace esp32 {
 
                 line = this.ser.readNewLine();
                 console.log(line);
-                
+                if (line == "ready" && !this.esp32Ready) {
+                    //it is first launch 
+                    this.esp32Ready = true;
+                    // this.status = ATStatus.Ok;
+                    // this.ackState = ATAckState.Tail;
+                }
+                if(this.voiceCmdNow) {
+                    if(line.indexOf("AT+VOICE=") != -1) {
+                        line = this.ser.readString();
+                        console.log("voice res:" + line);
+                        if(line == ">") {
+                            console.log("voice input");
+                            this.status = ATStatus.Ok;
+                            this.ackState = ATAckState.Tail;
+                        }
+                    }
+                    
+                }
                 if (line.length >= 2 && line.charAt(0) == 'A' && line.charAt(1) == 'T' && this.ackState == ATAckState.None) {
                     this.ackState = ATAckState.Head;
                     currentAckCmd = line;
-                } else if (this.ackState != ATAckState.None) {
+                } else if (this.ackState != ATAckState.None &&  this.status != ATStatus.Ok) {
                     if (line == "OK") {
                         this.status = ATStatus.Ok;
                         this.ackState = ATAckState.Tail;
@@ -125,6 +145,8 @@ namespace esp32 {
                 
             });
         }
+
+        
 
         parseIntRadix(s: string, base?: number) {
             if (base == null || base == 10) {
@@ -230,13 +252,23 @@ namespace esp32 {
             
             control.runInBackground(() => {
                 // send command
+                
                 while(this.atcmds.length) {
                     if (this.atready) {
                         this.atready = false;
                         const cmd = this.atcmds.shift();
-                        console.log(cmd);
+                        console.log("c->:" + cmd);
+                        if(cmd.indexOf("AT+VOICE=") != -1){
+                            this.voiceCmdNow = true;
+                        } else {
+                            this.voiceCmdNow = false;
+                        }
                         // send over
                         this.ser.writeString(cmd);
+                        // if(this.voiceCmdNow) {
+                        //     let res = this.ser.readString();
+                        //     //console.log("res:"+res);
+                        // }
                     }
                     pause(10);
                 }
@@ -259,6 +291,10 @@ namespace esp32 {
             return this.sendAT("").status == ATStatus.Ok;
         }
 
+        get isEsp32Ready():boolean {
+            return this.esp32Ready;
+        }
+
         version() {
             const r = this.sendAT("GMR");
             return r.lines.join("\r\n");            
@@ -272,6 +308,10 @@ namespace esp32 {
 
         }
 
+        disconnect():void {
+            this.wifiConnResponse = undefined;
+        }
+ 
         ping(dest: string, ttl: number = 250): number {
             // https://github.com/espressif/esp-at/blob/master/docs/ESP_AT_Commands_Set.md#425-atping-ping-packets
             const r = this.sendAT(`PING`, [dest, ttl]);
@@ -305,7 +345,7 @@ namespace esp32 {
                 this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
                     if(resp.status == ATStatus.Ok) {
                         this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
-                            console.log(resp.lines);
+                            //console.log(resp.lines);
                             this.wifiConnResponse = resp;
                         }); 
                     }
@@ -316,6 +356,52 @@ namespace esp32 {
             let r =  Math.constrain(time, 1, 4);
             this.sendNewAT("SPEECH="+time);
             //pause(time * 1000);
+        }
+
+        // lengthInUtf8Bytes(str:string) {
+        //     // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
+        //     var m = encodeURIComponent(str).match(/%[89ABab]/g);
+        //     return str.length + (m ? m.length : 0);
+        // }
+
+        byteLength(str:string) {
+            // returns the byte length of an utf8 string
+            let s = str.length;
+            for (let i=str.length-1; i>=0; i--) {
+              let code = str.charCodeAt(i);
+              if (code > 0x7f && code <= 0x7ff) s++;
+              else if (code > 0x7ff && code <= 0xffff) s+=2;
+              if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+            }
+            return s;
+          }
+
+        public setVoiceContent(msg:string) {
+            let len = this.byteLength(msg);
+            this.sendNewAT("VOICE="+len,[], function(resp:ATResponse) {
+                if(resp.status == ATStatus.Ok) {
+                    //this.ser.writeString(msg);
+                    console.log("send voice:" + msg);
+                    // let total = msg.length;
+                    // let pkgIdx = 0;
+                    // while(total) {
+                    //     total = total - 128;
+                    //     if (total < 0) {
+                    //         let sendstr = msg.substr(pkgIdx*128);
+                    //         this.ser.writeString(sendstr);
+                    //     } else {
+                    //         let sendstr = msg.substr(pkgIdx*128,128);
+                    //         this.ser.writeString(sendstr);
+                    //     }
+                    //     pkgIdx++;
+                    // }
+                    this.ser.writeString(msg);
+                }
+            }); 
+        }
+
+        public setVoicePerson(p:number) {
+            this.sendNewAT("VOICEP="+p);
         }
 
         public setHost(host:string,client:string) {

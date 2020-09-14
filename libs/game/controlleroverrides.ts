@@ -5,6 +5,9 @@ namespace controller {
     export const B = new Button(ControllerButton.B, DAL.CFG_PIN_BTN_B);
     //% fixedInstance whenUsed block="{id:controller}C"
     export const C = new Button(8, DAL.CFG_PIN_BTN_MENU2);
+    //% fixedInstance whenUsed block="{id:controller}Start"
+    export const Start = new Button(9, DAL.KEY_KP6);
+
 
     //% fixedInstance whenUsed block="left"
     export const left = new Button(ControllerButton.Left, DAL.CFG_PIN_BTN_LEFT);

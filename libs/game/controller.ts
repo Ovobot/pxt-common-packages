@@ -214,7 +214,7 @@ namespace controller {
 
     export function _player1(): Controller {
         if (!_players || !_players[0])
-            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B,controller.C, controller.menu]);
+            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B,controller.C,controller.Start, controller.menu]);
         return _players[0];
     }
 
@@ -346,6 +346,13 @@ namespace controller {
             return this.button(7);
         }
 
+        /**
+         * Get the 'Start' button
+         */
+        //%        
+        get Start() {
+            return this.button(9);
+        }
         /**
          * Control a sprite using the direction buttons from the controller. Note that this will overwrite
          * the current velocity of the sprite whenever a directional button is pressed. To stop controlling
