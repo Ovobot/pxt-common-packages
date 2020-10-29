@@ -1,4 +1,4 @@
-//% color=#cf6a87 weight=80 icon="\uf0c1" blockGap=8
+//% color=#6A31CA weight=70 icon="\uf0c1" blockGap=8
 //% blockGap=8
 namespace xtroniot {
     /**
@@ -6,12 +6,12 @@ namespace xtroniot {
      * @param host Mqtt server ip or address; eg: ovobotiot.cn
      * @param clientid Mqtt client id; eg: node01
     */
-    //% blockId=mqtt_sethost block="set Host%host clientID%clientid"
+    //% blockId=mqtt_sethost block="connect server with clientID%clientid"
     //% weight=90
-    export function mqttSetHost(host: string, clientid: string): void {
+    export function mqttSetHost(clientid: string): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            return c.setHost(host,clientid);
+            return c.setHost(clientid);
         }
         basic.pause(500)
     }

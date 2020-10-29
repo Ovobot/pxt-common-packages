@@ -47,6 +47,8 @@ namespace net {
     export class Net {
         private _controller: Controller;
         constructor(private factory: () => Controller) {
+            console.log("init factory");
+            console.log(this.factory());
             Net.instance = this;
             this._controller = undefined; // null failed to initialize
         }

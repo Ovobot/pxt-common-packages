@@ -43,6 +43,7 @@ namespace rtcModules{
 
   //%
   int getSeconds() {
+    requestUpdate();
     uint8_t res = rtc_bcd[0];
     uint8_t data = (res & 0x7f);
     uint8_t seconds = (data>>4)*10 + (data&0x0f);
@@ -51,6 +52,7 @@ namespace rtcModules{
 
   //%
   int getMinutes() {
+    requestUpdate();
     uint8_t res = rtc_bcd[1];
     uint8_t data = (res & 0x7f);
     uint8_t minutes = (data>>4)*10 + (data&0x0f);
@@ -59,6 +61,7 @@ namespace rtcModules{
 
   //%
   int getHours() {
+    requestUpdate();
     uint8_t minutes = 0;
     uint8_t res = rtc_bcd[2];
     uint8_t data = (res & 0x7f);
@@ -76,12 +79,14 @@ namespace rtcModules{
 
   //%
   int getDay() {
+    requestUpdate();
     uint8_t day = rtc_bcd[3];
     return day;
   }
 
   //%
   int getDate() {
+    requestUpdate();
     uint8_t res = rtc_bcd[4];
     uint8_t data = (res & 0x3f);
     uint8_t date = (data>>4)*10 + (data&0x0f);
@@ -90,6 +95,7 @@ namespace rtcModules{
 
   //%
   int getMonth() {
+    requestUpdate();
     uint8_t res = rtc_bcd[5];
     uint8_t data = (res & 0x1f);
     uint8_t month = (data>>4)*10 + (data&0x0f);
@@ -98,6 +104,7 @@ namespace rtcModules{
 
   //%
   int getFullYear() {
+    requestUpdate();
     uint8_t res = rtc_bcd[6];
     uint16_t year = 2000 + (res >> 4) * 10 + (res & 0x0f);
     return year;

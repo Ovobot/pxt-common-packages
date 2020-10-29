@@ -107,6 +107,18 @@ namespace speech {
     }
 
     /**
+     * Start voice input.
+     */
+    //% blockId=speech_start_voiceInput block="start voice input"
+    //% weight=85 blockGap=12
+    export function startVoiceInput(){
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            return c.startVoiceInput();
+        }
+    }
+
+    /**
      * Send at command.
      * @param command the command string, eg: AT
      */
@@ -212,5 +224,28 @@ namespace speech {
             return c.isSpeechResContain(keystr);
         } 
         return false;
-    }    
+    }  
+    
+    
+    /** 
+     * Send HTTP GET request and return JSON 
+     **/
+    //% blockId=http_getjson block="get json $url"
+    //% weight=62 draggableParameters=reporter
+    export function getJSON(url: string): void {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            return c.httpRequestGet(url);
+        } 
+    }
+
+    
+    //% blockId=http_result block="network json callback $res=variables_get(netResult)"
+    //% weight=60 blockGap=12
+    export function onNetworkResult(handler: (netResult: string) => void): void {
+        let c =  esp32.defaultController() as esp32.ATController;
+        if (c) {
+            c.registerNetRequestResponse(handler);
+        }
+    }
 }

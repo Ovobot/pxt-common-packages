@@ -9,7 +9,6 @@
         "lightsensor.ts",
         "thermometer.ts",
         "controller.ts",
-        "light.ts",
         "crank.ts",
         "controllerimpl.ts"
     ],
@@ -20,7 +19,6 @@
         "lightsensor": "file:../lightsensor",
         "thermometer": "file:../thermometer",
         "game": "file:../game",
-        "light": "file:../light",
         "rotary-encoder": "file:../rotary-encoder"
     }
 }

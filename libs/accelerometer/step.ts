@@ -150,7 +150,7 @@ namespace controller{
     //% blockId=getuserstep block="get user step"
     //% parts="accelerometer"
     //% group="Extras"
-    export function hanldeStepAcc():number {
+    export function getUserStep():number {
         return CURRENT_SETP;
     }
     

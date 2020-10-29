@@ -5,7 +5,6 @@ namespace net {
      * @param ttl 
      */
     //% blockId=netping block="net ping $dest"
-    //% blockHidden=true
     export function ping(dest: string, ttl: number = 250): number {
         net.log(`ping ${dest}`);
         const c = net.instance().controller;
@@ -126,6 +125,8 @@ read only when requested
             const r = new net.Response(null);
             r.status_code = 418; // teapot
             r.reason = "net controller not configured";
+            console.log(r.reason);
+
             return r;
         }
 
@@ -140,6 +141,7 @@ read only when requested
     }
 
     function internalRequest(method: string, url: string, options?: RequestOptions): net.Response {
+        console.log("internal Request");
         if (!options) options = {};
         if (!options.headers) {
             options.headers = {}
@@ -266,7 +268,6 @@ read only when requested
      * Send HTTP GET request and return text 
      **/
     //% blockId=netgetstring block="get string $url"
-    //% blockHidden=true
     export function getString(url: string, options?: RequestOptions): string {
         return get(url, options).text;
     }
@@ -275,7 +276,6 @@ read only when requested
      * Send HTTP GET request and return JSON 
      **/
     //% blockId=netgetjson block="get json $url"
-    //% blockHidden=true
     export function getJSON(url: string, options?: RequestOptions): any {
         options = options || {};
         options.headers = options.headers || {};

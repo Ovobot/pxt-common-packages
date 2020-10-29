@@ -38,13 +38,17 @@ namespace esp32 {
         private status:ATStatus = ATStatus.None;
         private errorCode: number = 0;
         private srHandler: (data: string) => void = null;
+        private netResultHandler: (data: string) => void = null;
         private wkupHandler: () => void = null;
         private mqttCb: ((data: string) => void)[] = [null, null, null, null, null, null, null, null];
         private mqttCbCnt: number = 0;
         private mqttCbKey: string[] = ['', '', '', '', '', '', '', ''];
         private atready:boolean = true;
         private voiceCmdNow:boolean = false;
+        private httpUserCmdNow:boolean = false;
         private esp32Ready:boolean = false;
+        private iotClient:string = "";
+        private netRequestResult:string = "";
         //private voiceReg = /AT+VOICE=/;
         constructor(private ser: serial.Serial) {
             super();
@@ -74,9 +78,25 @@ namespace esp32 {
                             console.log("voice input");
                             this.status = ATStatus.Ok;
                             this.ackState = ATAckState.Tail;
+                        } else {
+                            this.status = ATStatus.Error;
+                            this.ackState = ATAckState.Tail;
                         }
                     }
-                    
+                }
+                if (this.httpUserCmdNow) {
+                    if(line.indexOf("AT+HTTPREQUEST=") != -1) {
+                        line = this.ser.readString();
+                        console.log("http at res:" + line);
+                        if(line == ">") {
+                            console.log("http url input");
+                            this.status = ATStatus.Ok;
+                            this.ackState = ATAckState.Tail;
+                        } else {
+                            this.status = ATStatus.Error;
+                            this.ackState = ATAckState.Tail;
+                        }
+                    }
                 }
                 if (line.length >= 2 && line.charAt(0) == 'A' && line.charAt(1) == 'T' && this.ackState == ATAckState.None) {
                     this.ackState = ATAckState.Head;
@@ -116,7 +136,7 @@ namespace esp32 {
                         this.wkupHandler();
                     }
                     if (currentAckCmd.indexOf("AT+SUBRES=") != -1) {
-                        topic = currentAckCmd.substr(10);
+                        topic = currentAckCmd.substr(19);
                         const mqcbkey = this.mqttCbKey as string[];
                         for (let i = 0; i < mqcbkey.length; i++) {
                             let cbKey = mqcbkey[i];
@@ -143,6 +163,37 @@ namespace esp32 {
                     this.errorCode = 0;
                 }
                 
+            });
+            control.runInBackground(() => {
+                // send command
+                while(1) {
+                    if(this.atcmds.length) {
+                        if (this.atready) {
+                            this.atready = false;
+                            const cmd = this.atcmds.shift();
+                            //console.log("c->:" + cmd);
+                            if(cmd.indexOf("AT+VOICE=") != -1){
+                                this.voiceCmdNow = true;
+                            } else {
+                                this.voiceCmdNow = false;
+                            }
+                            if(cmd.indexOf("AT+HTTPREQUEST=") != -1) {
+                                this.httpUserCmdNow = true;
+                            } else {
+                                this.httpUserCmdNow = false;
+                            }
+                            // send over
+                            this.ser.writeString(cmd);
+                            // if(this.voiceCmdNow) {
+                            //     let res = this.ser.readString();
+                            //     //console.log("res:"+res);
+                            // }
+                        }
+                        
+                    }
+                    pause(5);
+                }
+
             });
         }
 
@@ -232,6 +283,10 @@ namespace esp32 {
         }
 
         private sendNewAT(command: string, args?: any[], callback?: (response: ATResponse) => void) {
+            if(this.atcmds.length > 10) {
+                console.log("cmd buf full");
+                return;
+            }
             let txt = this.prefix;
             // add command
             if (command)
@@ -249,30 +304,8 @@ namespace esp32 {
             } else {
                 this.atcmds.push(txt);
             }
-            
-            control.runInBackground(() => {
-                // send command
-                
-                while(this.atcmds.length) {
-                    if (this.atready) {
-                        this.atready = false;
-                        const cmd = this.atcmds.shift();
-                        console.log("c->:" + cmd);
-                        if(cmd.indexOf("AT+VOICE=") != -1){
-                            this.voiceCmdNow = true;
-                        } else {
-                            this.voiceCmdNow = false;
-                        }
-                        // send over
-                        this.ser.writeString(cmd);
-                        // if(this.voiceCmdNow) {
-                        //     let res = this.ser.readString();
-                        //     //console.log("res:"+res);
-                        // }
-                    }
-                    pause(10);
-                }
-            });
+            console.log("at buf size :" + this.atcmds.length);
+
         }
 
         private parseNumber(r : ATResponse): number {
@@ -358,6 +391,10 @@ namespace esp32 {
             //pause(time * 1000);
         }
 
+        public startVoiceInput() {
+            this.sendNewAT("SPEECHINPUT");
+        }
+
         // lengthInUtf8Bytes(str:string) {
         //     // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
         //     var m = encodeURIComponent(str).match(/%[89ABab]/g);
@@ -374,7 +411,7 @@ namespace esp32 {
               if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
             }
             return s;
-          }
+        }
 
         public setVoiceContent(msg:string) {
             let len = this.byteLength(msg);
@@ -400,20 +437,88 @@ namespace esp32 {
             }); 
         }
 
+        public httpRequestGet(url:string) {
+            let len = this.byteLength(url);
+            this.sendNewAT("HTTPREQUEST="+len,[], function(resp:ATResponse) {
+                if(resp.status == ATStatus.Ok) {
+                    //this.ser.writeString(msg);
+                    console.log("send HTTP URL:" + url);
+                    
+                    this.ser.writeString(url);
+                    let ansLen = "";
+                    let packetNum = "";
+                    control.runInBackground(() => {
+                        // send command
+                        while(1) {
+                            ansLen =  this.ser.readString();//this.ser.readUntil(Delimiters.Colon);
+                            if(ansLen.length){
+                                let netRequestResult = ""; 
+                                // let ansnumLen:number = parseFloat(ansLen);
+                                //console.log("num len:" + ansLen);
+                                console.log("num len:" + ansLen.length);
+
+                                packetNum = packetNum.concat(ansLen);
+                                let indexC = packetNum.indexOf(":");
+                                console.log("colon index:" + indexC);
+
+                                if(indexC != -1) {
+                                    let packlen = parseFloat(packetNum.slice(0,indexC));
+                                    console.log("get len:" + packlen);
+                                    if(packetNum.length > indexC+1) {
+                                        //start slice response
+                                        netRequestResult = packetNum.slice(indexC+1);
+                                        while(this.byteLength(netRequestResult) < packlen) {
+                                            ansLen =  this.ser.readString();
+                                            if(ansLen.length) {
+                                                netRequestResult = netRequestResult.concat(ansLen);
+                                                console.log("now len:" + this.byteLength(netRequestResult));
+                                            }
+                                            pause(1);
+                                        }
+                                    } else if(packlen > 0){
+                                        while(this.byteLength(netRequestResult) != packlen) {
+                                            let packet =  this.ser.readString();
+                                            if(packet) {
+                                                netRequestResult = netRequestResult.concat(packet);
+                                                console.log("now len:" + this.byteLength(netRequestResult));
+                                            }
+                                            pause(1);
+                                        }
+                                    }
+                                    if(netRequestResult.length && this.netResultHandler) {
+                                        this.netResultHandler(netRequestResult);
+                                    }
+                                    break;
+                                    
+                                }
+                                
+                            }
+                            
+                            pause(10);
+                        }
+                        console.log("http over");    
+                    });
+                }
+            });
+        }
+
         public setVoicePerson(p:number) {
             this.sendNewAT("VOICEP="+p);
         }
 
-        public setHost(host:string,client:string) {
-            this.sendNewAT("MQTT",[host,client]); 
+        public setHost(client:string) {
+            this.iotClient = client;
+            this.sendNewAT("MQTT",["ovobotiot.cn",client]); 
         }
 
         public pubTopicMessage(topic: string, message: string) {
-            this.sendNewAT("PUB",[topic,message]); 
+            let finalTopic = this.iotClient + '/' + topic;
+            this.sendNewAT("PUB",[finalTopic,message]); 
         }
 
         public subTopic(topic:string) {
-            this.sendNewAT("SUB",[topic]); 
+            let finalTopic = this.iotClient + '/' + topic;
+            this.sendNewAT("SUB",[finalTopic]); 
         }
 
         public registerMqttSubResponse(handler: (topic: string, message: string) => void){
@@ -422,6 +527,10 @@ namespace esp32 {
 
         public registerSRResponse(handler: (message: string) => void) {
             this.srHandler = handler;
+        }
+
+        public registerNetRequestResponse(handler: (message: string) => void) {
+            this.netResultHandler = handler;
         }
 
         public registerWakeupResponse(handler: () => void) {

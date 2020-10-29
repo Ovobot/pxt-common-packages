@@ -46,7 +46,6 @@
         "libs/net-game",
         "libs/mqtt",
         "libs/azureiot",
-        "libs/color",
         "libs/game",
         "libs/storyboard",
         "libs/rotary-encoder",

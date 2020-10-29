@@ -368,7 +368,6 @@ namespace controller {
         //% vx.defl=100 vy.defl=100
         //% help=controller/move-sprite
         //% group="Multiplayer"
-        //% blockHidden=1
         moveSprite(sprite: Sprite, vx: number = 100, vy: number = 100) {
             if (!sprite) return;
             if (!this._controlledSprites) this._controlledSprites = [];
@@ -398,7 +397,6 @@ namespace controller {
         //% blockId=ctrlonbuttonevent block="on %controller %button **button** %event"
         //% group="Multiplayer"
         //% help=controller/on-button-event
-        //% blockHidden=1
         onButtonEvent(btn: ControllerButton, event: ControllerButtonEvent, handler: () => void) {
             this.button(btn).onEvent(event, handler);
         }
@@ -412,7 +410,6 @@ namespace controller {
         //% blockId=ctrlonevent block="on %controller %event"
         //% group="Multiplayer"
         //% help=controller/on-event
-        //% blockHidden=1
         onEvent(event: ControllerEvent, handler: () => void) {
             control.onEvent(this.id, event, handler);
         }
@@ -434,7 +431,6 @@ namespace controller {
         //% weight=96 blockGap=8 help=controller/button/is-pressed
         //% blockId=ctrlispressed block="is %controller %button **button** pressed"
         //% group="Multiplayer"
-        //% blockHidden=1
         isPressed(btn: ControllerButton): boolean {
             return this.button(btn).isPressed();
         }
@@ -447,7 +443,6 @@ namespace controller {
         //% blockId=ctrldx block="%controller dx (left-right buttons)||scaled by %step"
         //% step.defl=100
         //% group="Multiplayer"
-        //% blockHidden=1
         dx(step: number = 100) {
             const ctx = control.eventContext();
             if (!ctx) return 0;
@@ -470,7 +465,6 @@ namespace controller {
         //% blockId=ctrldy block="%controller dy (up-down buttons)||scaled by %step"
         //% step.defl=100
         //% group="Multiplayer"
-        //% blockHidden=1
         dy(step: number = 100) {
             const ctx = control.eventContext();
             if (!ctx) return 0;
@@ -593,7 +587,6 @@ namespace controller {
     //% vx.defl=100 vy.defl=100
     //% help=controller/move-sprite
     //% group="Button"
-    //% blockHidden=1
     export function moveSprite(sprite: Sprite, vx: number = 100, vy: number = 100) {
         _player1().moveSprite(sprite, vx, vy);
     }
@@ -619,7 +612,6 @@ namespace controller {
     //% blockId=keydx block="dx (left-right buttons)||scaled by %step"
     //% step.defl=100
     //% group="Button"
-    //% blockHidden=1
     export function dx(step: number = 100) {
         return _player1().dx(step);
     }
@@ -632,7 +624,6 @@ namespace controller {
     //% blockId=keydy block="dy (up-down buttons)||scaled by %step"
     //% step.defl=100
     //% group="Button"
-    //% blockHidden=1
     export function dy(step: number = 100) {
         return _player1().dy(step);
     }

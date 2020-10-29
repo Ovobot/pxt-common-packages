@@ -34,9 +34,9 @@ namespace pxsim.input {
         b.accelerometer.setSampleRange(range);
     }
 
-    export function hanldeStepAcc():number {
-        return 0;
-    }
+    // export function hanldeStepAcc():number {
+    //     return 0;
+    // }
 
     export function acceleration(dimension: number): number {
         let b = accelerometer();

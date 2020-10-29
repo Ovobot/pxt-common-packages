@@ -30,6 +30,14 @@ namespace scene.rtcSetting{
     const CELL_HEIGHT = Math.floor(CONTENT_HEIGHT / (NUM_ROWS + 4));
     //% whenUsed=true
     const CELL_WIDTH = 10//Math.floor(CONTENT_WIDTH / NUMPAD_ROW_LENGTH);
+
+    //% whenUsed=true
+    const CELLDAY_WIDTH = 15;
+
+    //% whenUsed=true
+    const CELLDAY_HEIGHT = 10;
+
+
     //% whenUsed=true
     const LETTER_OFFSET_X = Math.floor((CELL_WIDTH - font.charWidth) / 2);
     //% whenUsed=true
@@ -82,6 +90,8 @@ namespace scene.rtcSetting{
     export class rtcSettingScene{
         theme: game.PromptTheme;
         private cursor: Sprite;
+        private daycursor: Sprite;
+
         private numbers: Sprite[];
         private separators: Sprite[];
         private colons: Sprite[];
@@ -101,6 +111,9 @@ namespace scene.rtcSetting{
         private timeymdstr:string;
         private timehmsstr:string;
         private currentInputNum:number;
+        private currentDay:string;
+        private weekEN = ['MO', 'TU', 'WE', 'TH', 'FR', 'SR', 'SU'];
+
         constructor(theme?: game.PromptTheme) {
             if (theme) {
                 this.theme = theme;
@@ -123,9 +136,63 @@ namespace scene.rtcSetting{
             this.answerLength = 8;//8
             this.inputIndex = 0;
             this.hmsinputIndex = -1;
-            this.timeymdstr = "19700101000000";
+            
+            this.timeymdstr = this.initTimeFromRtc();//"19700101000000MO";
             this.timehmsstr = "000000";
-            this.currentInputNum = 1;
+            this.currentInputNum = parseInt(this.timeymdstr.substr(0,1));
+        }
+
+    
+        initTimeFromRtc() : string {
+            pins.i2cWriteNumber(0x68, 0, NumberFormat.UInt8LE)
+            let buf = pins.i2cReadBuffer(0x68, 7);
+            let fmt:string = '';
+            if(buf.length) {
+                console.log(buf.length);
+                let ye = buf.getUint8(6);
+                let year = 2000 + (ye >> 4) * 10 + (ye & 0x0f);
+                fmt = fmt + year;
+                let mo = buf.getUint8(5);
+                let data = (mo & 0x1f);
+                let month = (data>>4)*10 + (data&0x0f);
+                let monthstr = month >= 10 ? month.toString() : ('0' + month);
+                fmt = fmt + monthstr;
+                let dt = buf.getUint8(4);
+                data = (dt & 0x3f);
+                let date = (data>>4)*10 + (data&0x0f);
+                let daystr = date >= 10 ? date.toString() : ('0' + date);
+                fmt = fmt + daystr;
+
+                let hours = 0;
+                let res = buf.getUint8(2);
+                data = (res & 0x7f);
+                let flag12 =  data >> 6;
+                if(flag12){
+                    let getAMPM = (data &= (1<<5));
+                    let data2 = (data & 0x1f);
+                    hours = (data2>>4)*10 + (data&0x0f);
+                } else {
+                    let data2 = (data & 0x3f);
+                    hours = (data2>>5)*20 + ((data & 0x1f)>>4)*10 + (data2&0x0f);
+                }
+                let hoursstr = hours >= 10 ? hours.toString() : ('0' + hours);
+                fmt = fmt + hoursstr;
+                res = buf.getUint8(1);
+                data = (res & 0x7f);
+                let minutes = (data>>4)*10 + (data&0x0f);
+                let minutesstr = minutes >= 10 ? minutes.toString() : ('0' + minutes);
+                fmt = fmt + minutesstr;
+                res = buf.getUint8(0);
+                data = (res & 0x7f);
+                let seconds = (data>>4)*10 + (data&0x0f);
+                let secondsstr = seconds >= 10 ? seconds.toString() : ('0' + seconds);
+                fmt = fmt + secondsstr;
+                let week = buf.getUint8(3);
+                let weekstr =  this.weekEN[week - 1];
+                fmt = fmt + weekstr;
+                return fmt;
+            }
+            return "19700101000000MO";
         }
 
         show(){
@@ -141,7 +208,7 @@ namespace scene.rtcSetting{
             //this.drawNumpad();
             this.drawInputarea();
             this.drawSeparator();
-            //this.drawEditHmsarea();
+            //this.drawEditDayofWeekArea();
             this.drawColons();
             this.drawBottomBar();
         }
@@ -190,27 +257,26 @@ namespace scene.rtcSetting{
                 s.y = INPUT_TOP  + CELL_HEIGHT + PADDING_VERTICAL;;
                 this.inputs.push(s);
             }
+
+            const blank = image.create(CELLDAY_WIDTH, CELL_HEIGHT);
+            const letter = this.timeymdstr.substr(-2);
+            this.currentDay = letter;
+            this.drawInput(blank, letter, this.theme.colorInput,false);
+
+            const s = sprites.create(blank, -1);
+            
+            s.y = INPUT_TOP  + 2* (CELL_HEIGHT + PADDING_VERTICAL);;
+            this.inputs.push(s);
         }
 
-        private drawEditHmsarea() {
-            const answerLeft = (screen.width - 8 * CELL_WIDTH) / 2
-
-            this.hmsinputs = [];
-            for (let i = 0; i < 6; i++) {
-                const blank = image.create(CELL_WIDTH, CELL_HEIGHT);
-                const letter = this.timehmsstr.substr(i, 1);
-                this.drawInput(blank, letter, this.theme.colorInput,false);
-
-                const s = sprites.create(blank, -1);
-                if (i >= 4){
-                    s.left = answerLeft + (i + 2) * CELL_WIDTH;
-                } else if (i >= 2){
-                    s.left = answerLeft + (i + 1) * CELL_WIDTH;
-                } else {
-                    s.left = answerLeft + i * CELL_WIDTH;
-                }
-                s.y = INPUT_TOP + CELL_HEIGHT + PADDING_VERTICAL;
-                this.hmsinputs.push(s);
+        private updateDaySelectCursor() {
+            if (this.cursorRow === 3) {
+                this.cursor.image.fill(0);
+                this.updateButtons();
+            }
+            else {
+                this.daycursor.x = ROW_LEFT + this.cursorColumn * CELLDAY_WIDTH;
+                this.daycursor.y = INPUT_TOP + CELLDAY_HEIGHT + PADDING_VERTICAL + 30;
             }
         }
 
@@ -267,6 +333,7 @@ namespace scene.rtcSetting{
 
         private drawInput(img: Image, char: string, color: number ,isblink:boolean) {
             img.fill(0);
+
             if(isblink){
                 img.fillRect(BLANK_PADDING, CELL_HEIGHT - 1, CELL_WIDTH - BLANK_PADDING * 2, 1, color)
             }
@@ -326,7 +393,7 @@ namespace scene.rtcSetting{
         }
 
         private updateButtons() {
-            if (this.inputIndex == this.answerLength+6) {
+            if (this.inputIndex == this.answerLength+7) {
                 this.confirmButton.image.fill(this.theme.colorCursor);
             }
             else {
@@ -345,55 +412,6 @@ namespace scene.rtcSetting{
             }
         }
 
-        private moveVertical(up: boolean) {
-            if (up) {
-                if (this.cursorRow === 4) {
-                    this.cursor.image.fill(this.theme.colorCursor);
-                    if(this.cursorColumn == 2 || this.cursorColumn == 0){
-                        this.cursorRow = 2;
-                    } else {
-                        this.cursorRow = 3;
-                    }
-                    this.updateButtons();
-                }
-                else {
-                    this.cursorRow = Math.max(0, this.cursorRow - 1);
-                }
-            }
-            else {
-                if (this.cursorRow === 2 && this.cursorColumn != 1){
-                    this.cursorRow = 4;
-                } else {
-                    this.cursorRow = Math.min(4, this.cursorRow + 1);
-                }
-            }
-
-            this.updateCursor();
-        }
-
-        private moveHorizontal(right: boolean) {
-            if (right) {
-                if (this.cursorRow == 3) {
-                    this.cursorColumn = 1;
-                } else {
-                    this.cursorColumn = (this.cursorColumn + 1) % NUMPAD_ROW_LENGTH;
-                }
-            }
-            else {
-                if (this.cursorRow == 3) {
-                    this.cursorColumn = 1;
-                } else {
-                    this.cursorColumn = (this.cursorColumn + (NUMPAD_ROW_LENGTH - 1)) % NUMPAD_ROW_LENGTH;
-                }
-            }
-
-            this.updateCursor();
-        }
-
-        // replaceAt=function(index, replacement) {
-        //     return this.substr(0, index) + replacement+ this.substr(index + replacement.length);
-        // }
-
         private replaceStr(str:string, index:number, char:string){
             const strAry = str.split('');
             strAry[index] = char;
@@ -408,11 +426,24 @@ namespace scene.rtcSetting{
             this.isEditing = false;
         }
 
+        private changeDayofWeek(){
+            this.isEditing = true;
+            let currentIndex = this.weekEN.indexOf(this.currentDay);
+            if(currentIndex == 6){
+                currentIndex = 0;
+            } else {
+                currentIndex++;
+            }
+            this.currentDay = this.weekEN[currentIndex];
+            this.timeymdstr = this.timeymdstr.substr(0,this.timeymdstr.length-2) + this.currentDay;//this.replaceStr(this.timeymdstr,this.inputIndex,''+ this.currentInputNum);
+            this.isEditing = false;
+        }
+
         private changeEditInput(right:boolean){
             //this.changeInputIndex(1);
             if(this.isEditing) return;
             if(right){
-                if (this.inputIndex >= this.answerLength+5) {
+                if (this.inputIndex >= this.answerLength+6) {
                     // this.inputIndex = this.answerLength + 5;
                     // this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
     
@@ -423,7 +454,7 @@ namespace scene.rtcSetting{
                     this.frameCount = 0;
                     this.blink = false;
                     this.updateSelectedInput();
-                    this.inputIndex = this.answerLength + 6;
+                    this.inputIndex = this.answerLength + 7;
                     this.updateButtons();
                     return;
                 }
@@ -440,14 +471,25 @@ namespace scene.rtcSetting{
             } else {
                 if (this.inputIndex == 0){
                     return;
-                } else if (this.inputIndex == this.answerLength + 6){
+                } else if (this.inputIndex == this.answerLength + 7){
                     this.inputIndex -= 1;
-                    this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
+                    this.currentDay = this.timeymdstr.substr(-2);
         
                     this.frameCount = 0
                     this.blink = false;
                     this.updateSelectedInput();
                     this.updateButtons();
+                    return;
+                } else if (this.inputIndex == 14){
+                    const u = this.inputs[this.inputIndex];
+                    const letter = this.timeymdstr.substr(-2);
+                    this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
+        
+                    this.inputIndex -= 1;
+                    this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
+    
+                    this.frameCount = 0
+                    this.blink = false;
                     return;
                 }
                 const u = this.inputs[this.inputIndex];
@@ -476,13 +518,13 @@ namespace scene.rtcSetting{
         }
     
 
-        private writeRtcTime(year:number,month:number,date:number,hour:number,minutes:number,seconds:number){
+        private writeRtcTime(year:number,month:number,date:number,hour:number,minutes:number,seconds:number,day:number){
             let buf = pins.createBuffer(8);
             buf[0] = 0x00;
             buf[1] = this.bin2bcd(seconds);
             buf[2] = this.bin2bcd(minutes);
             buf[3] = this.bin2bcd(hour);
-            buf[4] = this.bin2bcd(0);
+            buf[4] = this.bin2bcd(day);
             buf[5] = this.bin2bcd(date);   
             buf[6] = this.bin2bcd(month);  
             buf[7] = this.bin2bcd(year);      
@@ -496,8 +538,9 @@ namespace scene.rtcSetting{
             let hour = parseInt(this.timeymdstr.substr(8,2));
             let minute = parseInt(this.timeymdstr.substr(10,2));
             let seconds = parseInt(this.timeymdstr.substr(12,2));
+            let day = this.weekEN.indexOf(this.currentDay) + 1;
             if(year >= 2000) year -= 2000;
-            this.writeRtcTime(year,month,date,hour,minute,seconds);
+            this.writeRtcTime(year,month,date,hour,minute,seconds,day);
             scene.rtcSetting.closeSettingScene();
         }
 
@@ -530,8 +573,10 @@ namespace scene.rtcSetting{
             });
 
             controller.A.onEvent(SYSTEM_KEY_UP, () => {
-                if(this.inputIndex == this.answerLength + 6){
+                if(this.inputIndex == this.answerLength + 7){
                     this.confirm();
+                } else if(this.inputIndex == this.answerLength + 6){
+                    this.changeDayofWeek();
                 } else {
                     this.changeNumber();
                 }
@@ -540,6 +585,7 @@ namespace scene.rtcSetting{
 
             controller.B.onEvent(SYSTEM_KEY_DOWN, () => {
                 //this.delete();
+                scene.rtcSetting.closeSettingScene();
             });
 
 
@@ -571,6 +617,15 @@ namespace scene.rtcSetting{
                 }
                 else {
                     this.drawInput(u.image, '' + this.currentInputNum , this.theme.colorInputHighlighted,false);
+                }
+            } else if (this.inputIndex == this.answerLength + 6){
+                const u = this.inputs[this.inputIndex];
+                //console.log('draw:' +  this.currentDay);
+                if (this.blink) {
+                    this.drawInput(u.image, this.currentDay , this.theme.colorInput,true);
+                }
+                else {
+                    this.drawInput(u.image, this.currentDay , this.theme.colorInputHighlighted,false);
                 }
             }
         }

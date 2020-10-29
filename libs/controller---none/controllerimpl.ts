@@ -9,9 +9,9 @@ namespace controller.__internal {
         return 0;
     }
 
-    export function hanldeStepAcc(): number {
-        return 0;
-    }
+    // export function hanldeStepAcc(): number {
+    //     return 0;
+    // }
 }
 
 namespace controller.__internal {

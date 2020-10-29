@@ -13,6 +13,13 @@ enum ModuleIndex {
     Module4
 }
 
+enum TPIndex {
+    //% block="TP1"
+    TP1,
+    //% block="TP2"  
+    TP2
+}
+
 enum SubIndex { 
     //% block="1"
     subModule1 = 1,
@@ -45,7 +52,9 @@ enum LedIndex {
     //% block="4"
     L4,
     //% block="5"
-    L5
+    L5,
+    //% block="6"
+    L6
 }
 
 enum LineIndex {
@@ -94,7 +103,7 @@ namespace ovobotModules {
     const LINE_ADDRESS = 0x51
     const COLOR_ADDRESS = 0x40
     const lowBright = 8
-    const RGB_ADDRESS = 0x44
+    const RGB_ADDRESS = 0x4C
     const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
     let tempDevEnable = [false,false,false,false]
     function sonicEnable() {
@@ -181,10 +190,10 @@ namespace ovobotModules {
     /**
      * TODO: 控制RGB灯条。
      */
-    //% blockId=control_leds_output block="control neopixels %index color %color"
+    //% blockId=control_leds_output block="control %module neopixels %index color %color"
     //% weight=65
-    export function controlNeopixels(index: LedIndex, color: Color) { 
-        let buf = pins.createBuffer(20);
+    export function controlNeopixels(module: ModuleIndex, index: LedIndex, color: Color) { 
+        let buf = pins.createBuffer(21);
         let startPos;
         buf[0] = 0;
         buf[1] = 1;
@@ -195,12 +204,12 @@ namespace ovobotModules {
                 buf[i + 2] = (selectColors[color] & 0xff) / lowBright;
             }
         } else { 
-            startPos = 2 + 3 * index;
+            startPos = 2 + 3 * (index-1);
             buf[startPos] = ((selectColors[color] >> 8) & 0xff) / lowBright;
             buf[startPos + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
             buf[startPos + 2] = (selectColors[color] & 0xff) / lowBright;
         }
-        pins.i2cWriteBuffer(RGB_ADDRESS, buf);
+        pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
     }
 
     /**
@@ -238,11 +247,11 @@ namespace ovobotModules {
     /**
      * TODO: 触摸按键是否接触。
      */
-    //% blockId=isTouchDown block="touchkey %module is touched?"
+    //% blockId=isTouchDown block="touchkey %module the %tpindex is touched?"
     //% weight=65
-    export function isTouchDown(module: ModuleIndex): boolean{ 
-        pins.i2cWriteRegister(TOUCHKEY_ADDRESS + module, 0x00, 0x01);
-        let data = pins.i2cReadRegister(TOUCHKEY_ADDRESS + module, 0x01, NumberFormat.UInt8LE);
+    export function isTouchDown(module: ModuleIndex, tpindex: TPIndex): boolean{ 
+        pins.i2cWriteRegister(RGB_ADDRESS + module, 0x00, 0x01);
+        let data = pins.i2cReadRegister(RGB_ADDRESS + module, 0x13+tpindex, NumberFormat.UInt8LE);
         return (data == 1);
     }
 
