@@ -1,8 +1,4 @@
 #include "pxtbase.h"
-#ifdef CODAL_JACDAC_WIRE_SERIAL
-#include "LowLevelTimer.h"
-using namespace codal;
-#endif
 #include <limits.h>
 #include <stdlib.h>
 
@@ -47,9 +43,7 @@ void setBinding(int source, int value, Action act) {
             break;
         }
     }
-    incr(act);
     if (curr) {
-        decr(curr->action);
         curr->action = act;
         return;
     }
@@ -331,7 +325,7 @@ uint32_t toRealUTF8(String str, uint8_t *dst) {
 }
 #endif
 
-Buffer mkBuffer(const uint8_t *data, int len) {
+Buffer mkBuffer(const void *data, int len) {
     if (len <= 0 && !inGCPrealloc())
         return (Buffer)emptyBuffer;
     Buffer r = new (gcAllocate(sizeof(BoxedBuffer) + len)) BoxedBuffer();
@@ -478,9 +472,9 @@ String concat(String s, String other) {
     if (!other)
         other = (String)sNull;
     if (IS_EMPTY(s))
-        return (String)incrRC(other);
+        return other;
     if (IS_EMPTY(other))
-        return (String)incrRC(s);
+        return s;
 
     uint32_t lenA, lenB;
 
@@ -567,22 +561,22 @@ int length(String s) {
 }
 
 #define isspace(c) ((c) == ' ')
+#define iswhitespace(c) ((c) == 0x09 || (c) == 0x0B || (c) == 0x0C || (c) == 0x20 || (c) == 0xA0 || (c) == 0x0A || (c) == 0x0D)
 
 NUMBER mystrtod(const char *p, char **endp) {
-    while (isspace(*p))
+    while (iswhitespace(*p))
         p++;
     NUMBER m = 1;
     NUMBER v = 0;
     int dot = 0;
+    int hasDigit = 0;
     if (*p == '+')
         p++;
     if (*p == '-') {
         m = -1;
         p++;
     }
-    if (*p == '0' && (p[1] | 0x20) == 'x') {
-        return m * strtol(p, endp, 16);
-    }
+
     while (*p) {
         int c = *p - '0';
         if (0 <= c && c <= 9) {
@@ -590,15 +584,12 @@ NUMBER mystrtod(const char *p, char **endp) {
             v += c;
             if (dot)
                 m /= 10;
+            hasDigit = 1;
         } else if (!dot && *p == '.') {
             dot = 1;
-        } else if (*p == 'e' || *p == 'E') {
-            break;
+        } else if (!hasDigit) {
+            return NAN;
         } else {
-            while (isspace(*p))
-                p++;
-            if (*p)
-                return NAN;
             break;
         }
         p++;
@@ -606,7 +597,7 @@ NUMBER mystrtod(const char *p, char **endp) {
 
     v *= m;
 
-    if (*p) {
+    if (*p == 'e' || *p == 'E') {
         p++;
         int pw = (int)strtol(p, endp, 10);
         v *= p10(pw);
@@ -623,9 +614,7 @@ TNumber toNumber(String s) {
     char *endptr;
     auto data = s->getUTF8Data();
     NUMBER v = mystrtod(data, &endptr);
-    if (endptr != data + s->getUTF8Size())
-        v = NAN;
-    else if (v == 0.0 || v == -0.0) {
+    if (v == 0.0 || v == -0.0) {
         // nothing
     } else if (!isnormal(v))
         v = NAN;
@@ -754,7 +743,6 @@ NUMBER toDouble(TNumber v) {
         // TODO avoid allocation
         auto tmp = String_::toNumber((String)v);
         auto r = toDouble(tmp);
-        decr(tmp);
         return r;
     } else {
         return NAN;
@@ -954,7 +942,6 @@ bool eq_bool(TValue a, TValue b) {
 //%
 bool switch_eq(TValue a, TValue b) {
     if (eq_bool(a, b)) {
-        decr(b);
         return true;
     }
     return false;
@@ -996,9 +983,7 @@ int toBoolDecr(TValue v) {
         return 1;
     if (v == TAG_FALSE)
         return 0;
-    int r = toBool(v);
-    decr(v);
-    return r;
+    return toBool(v);
 }
 
 // The integer, non-overflow case for add/sub/bit opts is handled in assembly
@@ -1299,7 +1284,7 @@ String toString(TValue v) {
     ValType t = valType(v);
 
     if (t == ValType::String) {
-        return (String)(void *)incr(v);
+        return (String)v;
     } else if (t == ValType::Number) {
         char buf[64];
 
@@ -1508,20 +1493,6 @@ void deepSleep() __attribute__((weak));
 //%
 void deepSleep() {}
 
-#ifdef CODAL_JACDAC_WIRE_SERIAL
-LowLevelTimer *getJACDACTimer() {
-    static LowLevelTimer *jacdacTimer;
-    if (!jacdacTimer) {
-        jacdacTimer = allocateTimer();
-        jacdacTimer->setIRQPriority(1);
-    }
-    return jacdacTimer;
-}
-void initSystemTimer() {
-    new CODAL_TIMER(*allocateTimer());
-}
-#endif
-
 int *getBootloaderConfigData() __attribute__((weak));
 int *getBootloaderConfigData() {
     return NULL;
@@ -1563,14 +1534,11 @@ int getConfig(int key, int defl) {
 namespace pxtrt {
 //%
 TValue ldlocRef(RefRefLocal *r) {
-    TValue tmp = r->v;
-    incr(tmp);
-    return tmp;
+    return r->v;
 }
 
 //%
 void stlocRef(RefRefLocal *r, TValue v) {
-    decr(r->v);
     r->v = v;
 }
 
@@ -1622,8 +1590,7 @@ TValue mapGetByString(RefMap *map, String key) {
     if (i < 0) {
         return 0;
     }
-    TValue r = incr(map->values.get(i));
-    return r;
+    return map->values.get(i);
 }
 
 #ifdef PXT_VM
@@ -1673,13 +1640,11 @@ TValue mapGet(RefMap *map, unsigned key) {
 void mapSetByString(RefMap *map, String key, TValue val) {
     int i = map->findIdx(key);
     if (i < 0) {
-        incrRC(key);
         map->keys.push((TValue)key);
         map->values.push(val);
     } else {
         map->values.set(i, val);
     }
-    incr(val);
 }
 
 void mapSet(RefMap *map, unsigned key, TValue val) {
@@ -1777,7 +1742,7 @@ void anyPrint(TValue v) {
             auto vt = getVTable(o);
             auto meth = ((RefObjectMethod)vt->methods[1]);
             if ((void *)meth == (void *)&anyPrint)
-                DMESG("[RefObject refs=%d vt=%p cl=%d sz=%d]", REFCNT(o), o->vtable, vt->classNo,
+                DMESG("[RefObject vt=%p cl=%d sz=%d]", o->vtable, vt->classNo,
                       vt->numbytes);
             else
                 meth(o);
@@ -1795,15 +1760,10 @@ void anyPrint(TValue v) {
 
 static void dtorDoNothing() {}
 
-#ifdef PXT_GC
 #define PRIM_VTABLE(name, objectTp, tp, szexpr)                                                    \
     static uint32_t name##_size(tp *p) { return TOWORDS(sizeof(tp) + szexpr); }                    \
     DEF_VTABLE(name##_vt, tp, objectTp, (void *)&dtorDoNothing, (void *)&anyPrint, 0,              \
                (void *)&name##_size)
-#else
-#define PRIM_VTABLE(name, objectTp, tp, szexpr)                                                    \
-    DEF_VTABLE(name##_vt, tp, objectTp, (void *)&dtorDoNothing, (void *)&anyPrint)
-#endif
 
 #define NOOP ((void)0)
 
@@ -1970,6 +1930,8 @@ void dumpPerfCounters() {
 }
 
 void startPerfCounter(PerfCounters n) {
+    if (!perfCounters)
+        return;
     auto c = &perfCounters[(uint32_t)n];
     if (c->start)
         oops(50);
@@ -1977,6 +1939,8 @@ void startPerfCounter(PerfCounters n) {
 }
 
 void stopPerfCounter(PerfCounters n) {
+    if (!perfCounters)
+        return;
     auto c = &perfCounters[(uint32_t)n];
     if (!c->start)
         oops(51);
@@ -2020,8 +1984,11 @@ void endTry() {
 void throwValue(TValue v) {
     auto ctx = PXT_EXN_CTX();
     auto f = ctx->tryFrame;
-    if (!f)
+    if (!f) {
+        DMESG("unhandled exception, value:");
+        anyPrint(v);
         target_panic(PANIC_UNHANDLED_EXCEPTION);
+    }
     ctx->tryFrame = f->parent;
     TryFrame copy = *f;
     app_free(f);
@@ -2047,8 +2014,8 @@ void endFinally() {
     throwValue(getThrownValue());
 }
 
-// https://tools.ietf.org/html/draft-eastlake-fnv-14#section-3
-uint32_t hash_fnv1a(const void *data, unsigned len) {
+// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+uint32_t hash_fnv1(const void *data, unsigned len) {
     const uint8_t *d = (const uint8_t *)data;
     uint32_t h = 0x811c9dc5;
     while (len--)
