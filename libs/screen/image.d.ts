@@ -71,14 +71,6 @@ interface Image {
     flipX(): void;
 
     /**
-     * Flips (mirrors) pixels horizontally in the current image
-     */
-    //% shim=ImageMethods::xshear blockNamespace="images" group="Transformations"
-    //% block="xshear %picture=variables_get deg %deg"
-    //% help=images/image/flip-x
-    xshear(deg:number):Image;
-
-    /**
      * Flips (mirrors) pixels vertically in the current image
      */
     //% shim=ImageMethods::flipY blockNamespace="images" group="Transformations"

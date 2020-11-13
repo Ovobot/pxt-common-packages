@@ -36,6 +36,7 @@ namespace controller{
             TEMP_STEP = 1
         }
     }
+    let pedometerInit = false
     let accelerationXYZ = 0
     let total = 0
     let accz = 0
@@ -120,25 +121,13 @@ namespace controller{
     let valueNum = 5
     let tempValue = [0, 0, 0, 0, 0]
 
-    //% blockId=startPedometer block="start pedometer"
-    //% parts="accelerometer"
-    //% group="Extras"
-    export function startPedometer() {
-        // game.onUpdateInterval(50, function () {
-        //     accx = controller.acceleration(ControllerDimension.X) / 1000 * 9.8
-        //     accy = controller.acceleration(ControllerDimension.Y) / 1000 * 9.8
-        //     accz = controller.acceleration(ControllerDimension.Z) / 1000 * 9.8
-        //     total = accx * accx + accy * accy + accz * accz
-        //     accelerationXYZ = Math.sqrt(total)
-        //     detectorNewStep(accelerationXYZ)
-        // })
-
+    function startPedometer() {
         control.runInBackground(() => {
             while(1){
                 //console.log("background read");
-                accx = input.acceleration(0) / 1000 * 9.8 ; // controller.acceleration(ControllerDimension.X) / 1000 * 9.8
-                accy = input.acceleration(1) / 1000 * 9.8
-                accz = input.acceleration(2) / 1000 * 9.8
+                accx = acceleration(ControllerDimension.X) / 1000 * 9.8 ; 
+                accy = acceleration(ControllerDimension.Y) / 1000 * 9.8
+                accz = acceleration(ControllerDimension.Z) / 1000 * 9.8
                 total = accx * accx + accy * accy + accz * accz
                 accelerationXYZ = Math.sqrt(total)
                 detectorNewStep(accelerationXYZ)
@@ -147,10 +136,13 @@ namespace controller{
         });
     }
 
-    //% blockId=getuserstep block="get user step"
-    //% parts="accelerometer"
+    //% blockId=getuserstep block="user steps"
     //% group="Extras"
     export function getUserStep():number {
+        if(!pedometerInit) {
+            pedometerInit = true;
+            startPedometer()
+        }
         return CURRENT_SETP;
     }
     

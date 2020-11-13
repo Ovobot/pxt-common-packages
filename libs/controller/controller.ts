@@ -6,7 +6,7 @@ namespace controller {
      */
     //% blockId=repeatDefaultDelayInterval block="set button repeat delay $delay ms interval $interval ms"
     //% weight=10
-    //% group="Button"
+    //% group="Single Player"
     export function configureRepeatEventDefaults(delay: number, interval: number) {
         controller.setRepeatDefault(delay, interval);
     }

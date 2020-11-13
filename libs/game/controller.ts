@@ -34,7 +34,7 @@ enum ControllerEvent {
  * Access to game controls
  */
 //% weight=98 color="#D54322" icon="\uf11b"
-//% groups='["Button", "Extras"]'
+//% groups='["Single Player", "Multiplayer"]'
 //% blockGap=8
 namespace controller {
     let _userEventsEnabled = true;
@@ -109,7 +109,7 @@ namespace controller {
          */
         //% weight=99 blockGap=8 help=controller/button/on-event
         //% blockId=keyonevent block="on %button **button** %event"
-        //% group="Button"
+        //% group="Single Player"
         onEvent(event: ControllerButtonEvent, handler: () => void) {
             control.onEvent(event, this.id, handler);
         }
@@ -119,7 +119,7 @@ namespace controller {
          */
         //% weight=98 blockGap=8 help=controller/button/pause-until
         // blockId=keypauseuntil block="pause until %button **button** is %event"
-        //% group="Button"
+        //% group="Single Player"
         pauseUntil(event: ControllerButtonEvent) {
             control.waitForEvent(event, this.id)
         }
@@ -129,7 +129,7 @@ namespace controller {
          */
         //% weight=96 blockGap=8 help=controller/button/is-pressed
         //% blockId=keyispressed block="is %button **button** pressed"
-        //% group="Button"
+        //% group="Single Player"
         isPressed() {
             return this._pressed;
         }
@@ -214,7 +214,7 @@ namespace controller {
 
     export function _player1(): Controller {
         if (!_players || !_players[0])
-            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B,controller.C,controller.Start, controller.menu]);
+            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B, controller.menu]);
         return _players[0];
     }
 
@@ -331,14 +331,6 @@ namespace controller {
         }
 
         /**
-         * Get the 'Back' button
-         */
-        //%
-        get C() {
-            return this.button(8);
-        }        
-
-        /**
          * Get the 'Menu' button
          */
         //%
@@ -346,13 +338,6 @@ namespace controller {
             return this.button(7);
         }
 
-        /**
-         * Get the 'Start' button
-         */
-        //%        
-        get Start() {
-            return this.button(9);
-        }
         /**
          * Control a sprite using the direction buttons from the controller. Note that this will overwrite
          * the current velocity of the sprite whenever a directional button is pressed. To stop controlling
@@ -586,7 +571,7 @@ namespace controller {
     //% expandableArgumentMode="toggle"
     //% vx.defl=100 vy.defl=100
     //% help=controller/move-sprite
-    //% group="Button"
+    //% group="Single Player"
     export function moveSprite(sprite: Sprite, vx: number = 100, vy: number = 100) {
         _player1().moveSprite(sprite, vx, vy);
     }
@@ -611,7 +596,7 @@ namespace controller {
     //% weight=50 blockGap=8 help=controller/dx
     //% blockId=keydx block="dx (left-right buttons)||scaled by %step"
     //% step.defl=100
-    //% group="Button"
+    //% group="Single Player"
     export function dx(step: number = 100) {
         return _player1().dx(step);
     }
@@ -623,7 +608,7 @@ namespace controller {
     //% weight=49 help=keys/dy
     //% blockId=keydy block="dy (up-down buttons)||scaled by %step"
     //% step.defl=100
-    //% group="Button"
+    //% group="Single Player"
     export function dy(step: number = 100) {
         return _player1().dy(step);
     }

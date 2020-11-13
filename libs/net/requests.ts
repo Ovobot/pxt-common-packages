@@ -125,8 +125,6 @@ read only when requested
             const r = new net.Response(null);
             r.status_code = 418; // teapot
             r.reason = "net controller not configured";
-            console.log(r.reason);
-
             return r;
         }
 
@@ -141,7 +139,6 @@ read only when requested
     }
 
     function internalRequest(method: string, url: string, options?: RequestOptions): net.Response {
-        console.log("internal Request");
         if (!options) options = {};
         if (!options.headers) {
             options.headers = {}

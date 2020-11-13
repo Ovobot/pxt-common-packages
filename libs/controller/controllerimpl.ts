@@ -29,10 +29,6 @@ namespace controller.__internal {
     export function acceleration(dimension: ControllerDimension): number {
         return input.acceleration(<Dimension><number>dimension);
     }
-
-    // export function hanldeStepAcc(): number {
-    //     return input.hanldeStepAcc();
-    // }
 }
 
 namespace controller {
@@ -60,6 +56,7 @@ namespace controller.__internal {
         crankEncoder = encoders.createRotaryEncoder(pinA, pinB);
     }
 }
+
 
 namespace controller.__internal {
     export function lightLevel(): number {

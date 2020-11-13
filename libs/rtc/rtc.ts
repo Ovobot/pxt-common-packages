@@ -31,7 +31,7 @@ enum TimeFormat{
 }
 
 
-//% color="#1876c7" weight=75 icon="\uf133" block="DateTime"
+//% color="#20b2aa" weight=75 icon="\uf133" block="DateTime"
 //% groups='["Time","Create", "Basic","Separator", "Theme", "Digits" ]'
 namespace rtcModules {
 

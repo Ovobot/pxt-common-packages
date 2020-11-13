@@ -1,0 +1,14 @@
+{
+    "name": "jsontool",
+    "description": "jsontool parase json string - beta",
+    "files": [
+        "jsontool.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "dependencies": {
+        "core": "file:../core"
+    }
+}

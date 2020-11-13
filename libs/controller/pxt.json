@@ -10,6 +10,7 @@
         "thermometer.ts",
         "controller.ts",
         "crank.ts",
+        "step.ts",
         "controllerimpl.ts"
     ],
     "public": true,

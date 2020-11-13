@@ -4,7 +4,6 @@
 #include "I2C.h"
 #include "CoordinateSystem.h"
 #include "Accelerometer.h"
-//#include "count_steps.h"
 
 enum class Dimension {
     //% block=x
@@ -113,11 +112,7 @@ enum class Gesture {
 // defined in accelhw.cpp
 namespace pxt {
 codal::Accelerometer *getAccelerometer();
-// int8_t   data[NUM_TUPLES*3];
-int currentStep = 0;
-int accIndex = 0;
-float  scale_factor = 55.3293;
-float accMix = 0;
+
 void initAccelRandom() {
     auto acc = getAccelerometer();
     if (!acc) return;
@@ -195,17 +190,6 @@ int acceleration(Dimension dimension) {
     }
     return 0;
 }
-
-float fast_inverse_sqrt(float x)
-{
-    float half_x = 0.5 * x;
-    int i = *((int *)&x); // 以整数方式读取X
-    i = 0x5f3759df - (i>>1); // 神奇的步骤
-    x = *((float *)&i); // 再以浮点方式读取i
-    x = x*(1.5 - (half_x * x * x)); // 牛顿迭代一遍提高精度
-    return x;
-} 
-
 
 /**
  * The pitch or roll of the device, rotation along the ``x-axis`` or ``y-axis``, in degrees.

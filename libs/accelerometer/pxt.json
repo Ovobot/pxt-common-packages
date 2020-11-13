@@ -11,7 +11,6 @@
         "enums.d.ts",
         "ns.ts",
         "pxtparts.json",
-        "step.ts",
         "part.svg"
     ],
     "testFiles": [

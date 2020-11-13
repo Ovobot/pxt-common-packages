@@ -463,54 +463,6 @@ void flipY(Image_ img) {
     }
 }
 
-//%
-Image_ xshear(Image_ srcimg, int deg) {
-        int width =  srcimg->width();
-        int height = srcimg->height();
-		int outw = (int)(abs(deg) * height + width);
-		//int[] output = new int[height * outw];
-		
-        Image_ r = mkImage(height, outw, srcimg->bpp());
-
-		// initialization - 初始化计算变量
-		float skew = 0.0f;
-		float skewi = 0.0f;
-		float skewf = 0.0f;
-		int index = 0;
-		int outdex = 0;
-		float leftred = 0.0f, leftgreen = 0.0f, leftblue = 0.0f;
-		
-		// 执行对每个像素的错切变换
-		for(int row=0; row<height; row++) {
-			// skew = shear * (height-1-row + 0.5f); big issue!! very difficulty to find it
-			skew = deg * (row + 0.5f);
-			skewi = (float)floor(skew);
-			skewf = skew - skewi;
-			for(int col=0; col<width; col++) {
-				index = row * width + col;
-                int tc =  getCore(srcimg,col,row);
-                if(tc == 0) {
-                	continue;
-                }
-                // // calculate interpolation pixel value
-				// leftred = (skewf * tc);
-				// // calculate the new pixel RGB value
-				// tc = (int)(tc - leftred + oleftred);
-				
-				// fix issue, need to check boundary
-				// computation the new pixel postion here!!
-				//outdex = (int)(row * outw + col + skewi);
-                int x = (int)col + skewi;
-                setCore(r,x,row,tc);
-				
-				// // ready for next pixel.
-				// oleftred = leftred;
-			}
-		}
-		return r;
-}
- 
-
 /**
  * Returns a transposed image (with X/Y swapped)
  */
