@@ -2,7 +2,7 @@
 //% weight=99 color="#CC33CC" icon="\uf1c0"
 //% groups='["Create","Parse"]'
 //% advanced=true
-namespace JsonParse{
+namespace JsonParser{
 
 
     /**

@@ -165,13 +165,14 @@ namespace speech {
      * get wifi info
      * @param ssid wifi ssid; eg: @PHICOMM_B8
     */
-    //% blockId=speech_set_getrssi block="get wifi %ssid rssi strength"
+    //% blockId=speech_set_getrssi block="get rssi strength"
     //% weight=70 blockGap=12
-    export function getWifiRssiStrength(ssid:string ){
+    export function getWifiRssiStrength(): number {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            c.getRssi(ssid);
+           return c.getRssi();
         }
+        return undefined;
     }
 
     //% blockId=speech_set_getWlapssidInfo block="get wlap info"

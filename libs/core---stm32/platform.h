@@ -9,8 +9,8 @@
 #include "ZI2C.h"
 #include "ZSingleWireSerial.h"
 
-#include "XtronSerial.h"
 
+#include "XtronSerial.h"
 
 #include "pinmap.h"
 

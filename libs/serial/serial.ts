@@ -7,13 +7,36 @@
 namespace serial {
     export let NEW_LINE = "\r\n"; // \r require or Putty really unhappy on windows
     export let NEW_LINE_DELIMITER: Delimiters = Delimiters.NewLine;
-
+    
     export class Serial {
         serialDevice: SerialDevice;
         decoder: UTF8Decoder;
+        public static txbuffers: Buffer[];
+        public isTxEmpty:boolean = true;
+        public isRunningTx:boolean = false;
         constructor(serialDevice: SerialDevice) {
             this.serialDevice = serialDevice;
             this.decoder = new UTF8Decoder();
+            if (!Serial.txbuffers) Serial.txbuffers = [];
+
+        }
+
+        startTxTransfer():void {
+            if(this.isRunningTx) return;
+            this.isRunningTx = true; 
+            control.onEvent(1023, 2, () => {
+                this.isTxEmpty = true;
+            });
+            control.runInParallel(() => {
+                while(true) {
+                    if (Serial.txbuffers.length && this.isTxEmpty) {
+                        this.isTxEmpty = false;
+                        let buffer = Serial.txbuffers.shift();
+                        this.serialDevice.writeBuffer(buffer);
+                    }
+                    pause(1);    
+                }
+            })
         }
 
         readString(): string {
@@ -50,7 +73,8 @@ namespace serial {
         writeString(text: string) {
             if (!text) return;
             const buf = control.createBufferFromUTF8(text);
-            this.serialDevice.writeBuffer(buf);
+            Serial.txbuffers.push(buf);
+            this.startTxTransfer();
         }
 
         writeLine(text: string) {
@@ -212,7 +236,9 @@ namespace serial {
     export function writeBuffer(buffer: Buffer) {
         const ser = device();
         if (ser)
-            ser.serialDevice.writeBuffer(buffer);
+            Serial.txbuffers.push(buffer);
+            ser.startTxTransfer();
+            
     }
 
     /**
@@ -285,4 +311,5 @@ namespace serial {
     export function delimiters(del: Delimiters): string {
         return String.fromCharCode(del as number);
     }
+
 }

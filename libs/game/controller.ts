@@ -13,6 +13,8 @@ enum ControllerButton {
     A = 5,
     //% block="{id:controller}B"
     B = 6,
+    //% block="{id:controller}C"
+    C = 8,
     //% block="left"
     Left = 1,
     //% block="up"
@@ -20,7 +22,11 @@ enum ControllerButton {
     //% block="right"
     Right = 3,
     //% block="down"
-    Down = 4
+    Down = 4,
+    //% block="start"
+    Start = 9
+
+    
 }
 
 enum ControllerEvent {

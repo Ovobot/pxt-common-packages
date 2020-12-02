@@ -4,9 +4,9 @@ namespace controller {
     //% fixedInstance whenUsed block="{id:controller}B"
     export const B = new Button(ControllerButton.B, DAL.CFG_PIN_BTN_B);
     //% fixedInstance whenUsed block="{id:controller}C"
-    export const C = new Button(8, DAL.CFG_PIN_BTN_MENU2);
-    //% fixedInstance whenUsed block="{id:controller}Start"
-    export const Start = new Button(9, DAL.KEY_KP6);
+    export const C = new Button(ControllerButton.C, DAL.CFG_PIN_BTN_MENU2);
+    //% fixedInstance whenUsed block="start"
+    export const start = new Button(ControllerButton.Start, DAL.KEY_KP6);
 
 
     //% fixedInstance whenUsed block="left"

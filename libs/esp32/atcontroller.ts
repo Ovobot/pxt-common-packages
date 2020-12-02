@@ -18,7 +18,7 @@ namespace esp32 {
         lines: string[];
     }
 
-
+    
 
     /**
      * Controller for AT command set https://github.com/espressif/esp-at/blob/master/docs/ESP_AT_Commands_Set.md
@@ -33,8 +33,11 @@ namespace esp32 {
         private mqttCbTopicData: (topic: string, data: string) => void = null;
         private mWakeUp = false;
         private atHandles:((response: ATResponse) => void)[] = [];
+        private cacheHandles:((response: ATResponse) => void)[] = [];
+
         private ackState:ATAckState = ATAckState.None;
         private atcmds:string[] = []; 
+        private cachecmds:string[] = []; 
         private status:ATStatus = ATStatus.None;
         private errorCode: number = 0;
         private srHandler: (data: string) => void = null;
@@ -44,11 +47,13 @@ namespace esp32 {
         private mqttCbCnt: number = 0;
         private mqttCbKey: string[] = ['', '', '', '', '', '', '', ''];
         private atready:boolean = true;
+        private currentSsid:string = '';
         private voiceCmdNow:boolean = false;
         private httpUserCmdNow:boolean = false;
         private esp32Ready:boolean = false;
         private iotClient:string = "";
         private netRequestResult:string = "";
+        private rssi:number = 0;
         //private voiceReg = /AT+VOICE=/;
         constructor(private ser: serial.Serial) {
             super();
@@ -190,8 +195,15 @@ namespace esp32 {
                             // }
                         }
                         
+                    } else {
+                        if (this.atready){
+                            if (this.cachecmds.length) {
+                                this.atcmds.push(this.cachecmds.shift());
+                                this.atHandles.push(this.cacheHandles.shift());
+                            }
+                        }
                     }
-                    pause(5);
+                    pause(1);
                 }
 
             });
@@ -283,7 +295,7 @@ namespace esp32 {
         }
 
         private sendNewAT(command: string, args?: any[], callback?: (response: ATResponse) => void) {
-            if(this.atcmds.length > 10) {
+            if(this.cachecmds.length > 10) {
                 console.log("cmd buf full");
                 return;
             }
@@ -299,13 +311,18 @@ namespace esp32 {
             }
             txt += this.newLine;            
             if (callback) {
-                this.atHandles.push(callback);
-                this.atcmds.unshift(txt);
+                if(this.atready) {
+                    this.atHandles.push(callback);
+                    this.atcmds.unshift(txt);
+                } else {
+                    this.cacheHandles.push(callback);
+                    this.cachecmds.push(txt);
+                }
+                
             } else {
                 this.atcmds.push(txt);
             }
-            console.log("at buf size :" + this.atcmds.length);
-
+            
         }
 
         private parseNumber(r : ATResponse): number {
@@ -375,6 +392,7 @@ namespace esp32 {
         }
 
         public wifiConnect(ssid:string,password:string){
+                this.currentSsid = ssid;
                 this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
                     if(resp.status == ATStatus.Ok) {
                         this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
@@ -418,7 +436,8 @@ namespace esp32 {
             this.sendNewAT("VOICE="+len,[], function(resp:ATResponse) {
                 if(resp.status == ATStatus.Ok) {
                     //this.ser.writeString(msg);
-                    console.log("send voice:" + msg);
+                    console.log("send voice:" + msg + '.');
+                    
                     // let total = msg.length;
                     // let pkgIdx = 0;
                     // while(total) {
@@ -562,14 +581,18 @@ namespace esp32 {
         }
 
 
-        public getRssi(ssid:string){
+        public getRssi():number{
             this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
                 if(resp.status == ATStatus.Ok) {
-                    this.sendNewAT("CWLAP",[ssid],function(resp:ATResponse) {
-                        console.log(resp.lines);
+                    this.sendNewAT("CWLAP",[this.currentSsid],function(resp:ATResponse) {
+                        //console.log(resp.lines);
+                        let res1 = resp.lines[0];
+                        let sep = res1.split(",");
+                        this.rssi = parseInt(sep[2]);
                     }); 
                 }
             });
+            return this.rssi;
             
         }
 
