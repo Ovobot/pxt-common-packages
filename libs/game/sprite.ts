@@ -466,8 +466,8 @@ class Sprite extends sprites.BaseSprite {
     //% inlineInputMode=inline
     //% help=sprites/sprite/say
     say(text: any, timeOnScreen?: number, textColor = 15, textBoxColor = 1) {
-        // clear say
-        if (!text) {
+        // clear say if nullish or empty string (not on e.g. 0)
+        if (text === null || text === undefined || text === "") {
             this.updateSay = undefined;
             if (this.sayBubbleSprite) {
                 this.sayBubbleSprite.destroy();
@@ -931,7 +931,7 @@ class Sprite extends sprites.BaseSprite {
                         return;
                     }
 
-                    const maxMomentumDiff = timeDiff * turnRate * (speed / 50);
+                    const maxMomentumDiff = timeDiff * turnRate * (rate / 50);
                     const angleToTarget = Math.atan2(dy, dx);
 
                     // to move directly towards target, use this...

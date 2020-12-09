@@ -345,7 +345,7 @@ void seedRandom(unsigned seed) {
     random_value = seed;
 }
 
-//%
+//% expose
 void seedAddRandom(unsigned seed) {
     random_value ^= 0xCA2557CB * seed;
 }
@@ -750,7 +750,11 @@ NUMBER toDouble(TNumber v) {
 }
 
 float toFloat(TNumber v) {
-    // TODO optimize?
+    if (v == TAG_NAN || v == TAG_UNDEFINED)
+        return NAN;
+    // optimize for the int case - this will avoid software conversion when FPU is present
+    if (isTagged(v))
+        return toInt(v);
     return (float)toDouble(v);
 }
 
