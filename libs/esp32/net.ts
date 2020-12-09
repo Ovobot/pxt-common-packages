@@ -63,5 +63,5 @@ namespace esp32 {
 
     // initialize net
     //console.log("init default controller");
-    // new net.Net(defaultController);
+    new net.Net(defaultController);
 }

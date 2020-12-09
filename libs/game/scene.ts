@@ -173,6 +173,16 @@ namespace scene {
                 game.consoleOverlay.draw();
                 // check for power deep sleep
                 power.checkDeepSleep();
+                power.checkScreenSleep();
+                if(power.isInScreenSleep()) {
+                    game.waitAnyButton();
+                    const brightness = settings.readNumber("#brightness");
+                    if (brightness !== undefined)
+                        screen.setBrightness(brightness)
+                    else     
+                        screen.setBrightness(100);
+                    power.poke();
+                }
             });
             // update screen
             this.eventContext.registerFrameHandler(UPDATE_SCREEN_PRIORITY, control.__screen.update);

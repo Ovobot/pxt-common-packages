@@ -67,7 +67,8 @@ namespace net {
                 console.log("WiFi module not configured");
                 return;
             }
-            pauseUntil(() => this.wifi.isIdle, 30000);
+            pauseUntil(() => this.wifi.isIdle, 3000);
+            console.log("wifi start");
             if (!this.wifi.isIdle) {
                 console.log("WiFi module not responding")
                 return;

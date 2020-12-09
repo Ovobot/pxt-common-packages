@@ -1,0 +1,18 @@
+{
+    "name": "power-ext",
+    "description": "power management settings",
+    "files": [
+        "sleep.ts",
+        "droplist.ts"
+    ],
+    "dependencies": {
+        "core": "file:../core",
+        "screen": "file:../screen",
+        "power": "file:../power",
+        "settings": "file:../settings",
+        "game": "file:../game",
+        "arcade-text":"file:../arcade-text"
+
+    },
+    "public": true
+}

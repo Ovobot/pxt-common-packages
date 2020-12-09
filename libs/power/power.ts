@@ -6,7 +6,8 @@
 namespace power {
     let _poked: number;
     let _timeout: number;
-
+    let _screenout:number;
+    let _screenSleep:boolean;
     /**
      * Set the no-activity duration after which the device should go to deep sleep.
      * @param seconds duration in seconds until the device should be put in lower power mode
@@ -16,7 +17,12 @@ namespace power {
     //% help=/power/set-deep-sleep-timeout
     export function setDeepSleepTimeout(seconds: number) {
         init();
-        _timeout = seconds * 1000;
+        _timeout = seconds;
+    }
+
+    export function setScreenTimeout(seconds: number) {
+        init();
+        _screenout = seconds;
     }
 
     /**
@@ -26,6 +32,7 @@ namespace power {
     //% help=/power/poke
     export function poke() {
         init();
+        _screenSleep = false;
         _poked = control.millis();
     }
 
@@ -46,6 +53,23 @@ namespace power {
         }
     }
 
+    export function checkScreenSleep() {
+        init();
+        const p = _poked || 0;
+        const to = _screenout || 0;
+        if (to > 0 && 
+            control.millis() - p > to &&
+            !control.isUSBInitialized()) {
+            screen.setBrightness(0);
+            _screenSleep = true;
+        }
+
+    }
+
+    export function isInScreenSleep(): boolean {
+        return _screenSleep;
+    }
+
     /**
      * Put the device into a deep sleep state.
      */
@@ -57,12 +81,22 @@ namespace power {
 
     function init() {
         if (_timeout !== undefined) return;
-
+        if (_screenout !== undefined ) return;
         // read default value
-        _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
-        // ensure deepsleep is long enough
-        const minDeepSleepTimeout = 300000;
-        if (_timeout > 0 && _timeout < minDeepSleepTimeout)
-            _timeout = minDeepSleepTimeout;
+        // _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
+        _timeout =  settings.readNumber("#deepsleep");
+        _screenout = settings.readNumber("#screensleep");
+        if (_timeout == undefined) {
+            _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
+            // ensure deepsleep is long enough
+            const minDeepSleepTimeout = 300000;
+            if (_timeout > 0 && _timeout < minDeepSleepTimeout)
+                _timeout = minDeepSleepTimeout;
+            settings.writeNumber("#deepsleep", _timeout)
+        }
+        if (_screenout == undefined) {
+            _screenout = -1;
+            settings.writeNumber("#screensleep", _screenout)
+        }
     }
 }

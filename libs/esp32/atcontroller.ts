@@ -251,45 +251,37 @@ namespace esp32 {
          * Sends and receives an AT command
          * @param command command name
          */
-        private sendAT(command: string, args?: any[]) :ATResponse{
-            control.runInBackground(() => {
-                // send command
-                let txt = this.prefix;
-                // add command
-                if (command)
-                    txt += "+" + command;
-                // filter out undinfed from the back
-                while (args && args.length && args[args.length - 1] === undefined)
-                    args.pop();
-                if (args && args.length > 0) {
-                    txt += "=" + args.map(arg => "\""  + arg + "\"").join(",");
-                }
-                txt += this.newLine;
-                // send over
-                this.ser.writeString(txt);
-            });
-         // read output
-         let status = ATStatus.None;
-         let errorCode: number = 0;
-         let line = "";
-         let lines: string[] = [];
-            // control.runInBackground(() => {
-            //     do {
-            //         line = this.ser.readNewLine();
-            //         console.log(line);
-            //         if (line == "OK")
-            //             status = ATStatus.Ok;
-            //         // else if (line == "ERROR")
-            //         //     status = ATStatus.Error;
-            //         // else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
-            //         //     errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16); //parseInt(line.substr("ERR CODE:".length + 2), 16)
-            //         else if (!line.length) continue; // keep reading
-            //         else if(line.length) {
-            //             lines.push(line);
-            //         }
-            //     } while (status == ATStatus.None);
-            // });
-
+        private sendAT(command: string, args?: any[]): ATResponse {
+            // send command
+            let txt = this.prefix;
+            // add command
+            if (command)
+                txt += "+" + command;
+            // filter out undinfed from the back
+            while (args && args.length && args[args.length - 1] === undefined)
+                args.pop();
+            if (args && args.length > 0) {
+                txt += "=" + args.map(arg => "" + arg).join(",");
+            }
+            txt += this.newLine;
+            // send over
+            this.ser.writeString(txt);
+            // read output
+            let status = ATStatus.None;
+            let errorCode: number = 0;
+            let line = "";
+            const lines: string[] = [];
+            do {
+                line = this.ser.readLine();
+                if (line == "OK")
+                    status = ATStatus.Ok;
+                else if (line == "ERROR")
+                    status = ATStatus.Error;
+                else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:")
+                errorCode = parseInt(line.substr("ERR CODE:".length + 2), 16)
+                else if (!line.length) continue; // keep reading
+                else lines.push(line);
+            } while (status == ATStatus.None);
 
             return { status: status, errorCode: errorCode, lines: lines };
         }
@@ -337,8 +329,9 @@ namespace esp32 {
             return time;
         }
 
-        get isIdle(): boolean { 
-            return this.sendAT("").status == ATStatus.Ok;
+        get isIdle(): boolean {
+            return this.esp32Ready; 
+            //return this.sendAT("").status == ATStatus.Ok;
         }
 
         get isEsp32Ready():boolean {
@@ -369,8 +362,25 @@ namespace esp32 {
         }
 
         public scanNetworks(): net.AccessPoint[] {
+            let aps = []
+            this.sendNewAT('CWLAP',[],function(resp:ATResponse) {
+                
+                if(resp.status == ATStatus.Ok) {
+                    let apinfos = resp.lines;
+                    for (let apinfo of apinfos) {
+                       if (apinfo.length >  "+CWLAP:".length) {
+                         let ap =  apinfo.substr("+CWLAP:".length)
+                         console.log(ap);
+                       }
+
+                    }
+                    
+                }
+            });
             return [];
         }
+
+        
 
         public socket(): number {
             return -1;

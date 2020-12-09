@@ -8,6 +8,8 @@
     ],
     "public": true,
     "dependencies": {
-        "core": "file:../core"
+        "core": "file:../core",
+        "settings": "file:../settings",
+        "screen": "file:../screen"
     }
 }
