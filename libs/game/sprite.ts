@@ -445,7 +445,7 @@ class Sprite extends sprites.BaseSprite {
     //% group="Physics"
     //% weight=100
     //% blockId=spritesetvel block="set %sprite(mySprite) velocity to vx %vx vy %vy"
-    //% help=sprites/sprite/set-velociy
+    //% help=sprites/sprite/set-velocity
     //% vx.shadow=spriteSpeedPicker
     //% vy.shadow=spriteSpeedPicker
     setVelocity(vx: number, vy: number): void {
@@ -466,8 +466,8 @@ class Sprite extends sprites.BaseSprite {
     //% inlineInputMode=inline
     //% help=sprites/sprite/say
     say(text: any, timeOnScreen?: number, textColor = 15, textBoxColor = 1) {
-        // clear say
-        if (!text) {
+        // clear say if nullish or empty string (not on e.g. 0)
+        if (text === null || text === undefined || text === "") {
             this.updateSay = undefined;
             if (this.sayBubbleSprite) {
                 this.sayBubbleSprite.destroy();
@@ -931,7 +931,7 @@ class Sprite extends sprites.BaseSprite {
                         return;
                     }
 
-                    const maxMomentumDiff = timeDiff * turnRate * (speed / 50);
+                    const maxMomentumDiff = timeDiff * turnRate * (rate / 50);
                     const angleToTarget = Math.atan2(dy, dx);
 
                     // to move directly towards target, use this...
