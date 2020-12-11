@@ -7,8 +7,8 @@ namespace esp32 {
 
         // pause(1000);
         // look for ESP32 over serial pins
-        const rx = pins.pinByCfg(DAL.CFG_PIN_RX);
-        const tx = pins.pinByCfg(DAL.CFG_PIN_TX);
+        const rx = pins.pinByCfg(DAL.CFG_PIN_WIFI_AT_RX);
+        const tx = pins.pinByCfg(DAL.CFG_PIN_WIFI_AT_TX);
 
         if (rx && tx) {
             const dev = serial.createSerial(tx,rx,DAL.DEVICE_ID_SERIAL);
