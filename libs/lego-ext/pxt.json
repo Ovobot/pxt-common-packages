@@ -1,0 +1,17 @@
+{
+    "name": "lego-ext",
+    "description": "control lego hardware",
+    "files": [
+        "README.md",
+        "mavlink.ts",
+        "lego.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "dependencies": {
+        "core": "file:../core",
+        "serial": "file:../serial"
+    }
+}
