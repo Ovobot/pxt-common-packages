@@ -81,6 +81,11 @@ namespace serial {
             this.writeString(text);
             this.writeString(serial.NEW_LINE);
         }
+
+        writeBuffer(buf:Buffer) {
+            Serial.txbuffers.push(buf);
+            this.startTxTransfer();
+        }
     }
 
     /**

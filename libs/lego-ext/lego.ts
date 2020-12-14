@@ -17,7 +17,7 @@ namespace lego {
 
         public ctlServoAngle(angle:number) {
             const msg = this.mavlink.mavlinkPackCtrlServo(angle);
-            this.ser.serialDevice.writeBuffer(msg);
+            this.ser.writeBuffer(msg);
         }
     }
 

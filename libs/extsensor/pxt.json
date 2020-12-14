@@ -2,12 +2,18 @@
     "name": "extsensor",
     "description": "xtronpro ext sensors",
     "files": [
-        "extsensor.ts"
+        "extsensor.ts",
+        "defaultstrip.ts",
+        "lightext.ts",
+        "neopixel.ts",
+        "transitions.ts",
+        "animations.jres"
     ],
     "testFiles": [
     ],
     "public": true,
     "dependencies": {
-        "core": "file:../core"
+        "core": "file:../core",
+        "color": "file:../color"
     }
 }

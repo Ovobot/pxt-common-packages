@@ -103,7 +103,7 @@ namespace ovobotModules {
     const LINE_ADDRESS = 0x51
     const COLOR_ADDRESS = 0x40
     const lowBright = 8
-    const RGB_ADDRESS = 0x4C
+    const RGB_ADDRESS = 0x3C
     const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
     let tempDevEnable = [false,false,false,false]
     function sonicEnable() {
@@ -210,6 +210,14 @@ namespace ovobotModules {
             buf[startPos + 2] = (selectColors[color] & 0xff) / lowBright;
         }
         pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
+    }
+
+    export function controlNeopixelsWithBuffer(buffer:Buffer) {
+        let buf = pins.createBuffer(2);
+        buf[0] = 0;
+        buf[1] = 1;       
+        let sendbuf = Buffer.concat([buf,buffer]) 
+        pins.i2cWriteBuffer(RGB_ADDRESS , sendbuf);
     }
 
     /**
