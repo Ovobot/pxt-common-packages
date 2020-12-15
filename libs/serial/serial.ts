@@ -11,13 +11,13 @@ namespace serial {
     export class Serial {
         serialDevice: SerialDevice;
         decoder: UTF8Decoder;
-        public static txbuffers: Buffer[];
+        public txbuffers: Buffer[];
         public isTxEmpty:boolean = true;
         public isRunningTx:boolean = false;
         constructor(serialDevice: SerialDevice) {
             this.serialDevice = serialDevice;
             this.decoder = new UTF8Decoder();
-            if (!Serial.txbuffers) Serial.txbuffers = [];
+            if (!this.txbuffers) this.txbuffers = [];
 
         }
 
@@ -29,9 +29,9 @@ namespace serial {
             });
             control.runInParallel(() => {
                 while(true) {
-                    if (Serial.txbuffers.length && this.isTxEmpty) {
+                    if (this.txbuffers.length && this.isTxEmpty) {
                         this.isTxEmpty = false;
-                        let buffer = Serial.txbuffers.shift();
+                        let buffer = this.txbuffers.shift();
                         this.serialDevice.writeBuffer(buffer);
                     }
                     pause(1);    
@@ -73,7 +73,7 @@ namespace serial {
         writeString(text: string) {
             if (!text) return;
             const buf = control.createBufferFromUTF8(text);
-            Serial.txbuffers.push(buf);
+            this.txbuffers.push(buf);
             this.startTxTransfer();
         }
 
@@ -83,7 +83,7 @@ namespace serial {
         }
 
         writeBuffer(buf:Buffer) {
-            Serial.txbuffers.push(buf);
+            this.txbuffers.push(buf);
             this.startTxTransfer();
         }
     }
@@ -241,7 +241,7 @@ namespace serial {
     export function writeBuffer(buffer: Buffer) {
         const ser = device();
         if (ser)
-            Serial.txbuffers.push(buffer);
+            ser.txbuffers.push(buffer);
             ser.startTxTransfer();
             
     }
