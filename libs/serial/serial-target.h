@@ -22,7 +22,7 @@ class CodalSerialDeviceProxy {
         if (id <= 0)
             id = allocateNotifyEvent();
         ser.id = id;
-        ser.setBaud(115200);
+        //ser.setBaud(115200);
     }
 
     bool matchPins(DevicePin *_tx, DevicePin *_rx) { return this->tx == _tx && this->rx == _rx; }
@@ -31,7 +31,7 @@ class CodalSerialDeviceProxy {
 
     void setTxBufferSize(uint8_t size) { ser.setTxBufferSize(size); }
 
-    void setBaudRate(int rate) { ser.setBaud(rate); }
+    void setBaudRate(int rate) { ser.setBaudrate(rate); }
 
     int read() {
         uint8_t buf[1];
@@ -47,7 +47,7 @@ class CodalSerialDeviceProxy {
     }
 
     Buffer readBuffer() {
-        int n = ser.getRxBufferSize();
+        int n = ser.rxBufferedSize();
         // n maybe 0 but we still call read to force
         // to initialize rx
         auto buf = mkBuffer(NULL, n);

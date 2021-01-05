@@ -11,38 +11,20 @@ namespace serial {
     export class Serial {
         serialDevice: SerialDevice;
         decoder: UTF8Decoder;
-        public txbuffers: Buffer[];
-        public isTxEmpty:boolean = true;
-        public isRunningTx:boolean = false;
         constructor(serialDevice: SerialDevice) {
             this.serialDevice = serialDevice;
             this.decoder = new UTF8Decoder();
-            if (!this.txbuffers) this.txbuffers = [];
-
-        }
-
-        startTxTransfer():void {
-            if(this.isRunningTx) return;
-            this.isRunningTx = true; 
-            control.onEvent(1023, 2, () => {
-                this.isTxEmpty = true;
-            });
-            control.runInParallel(() => {
-                while(true) {
-                    if (this.txbuffers.length && this.isTxEmpty) {
-                        this.isTxEmpty = false;
-                        let buffer = this.txbuffers.shift();
-                        this.serialDevice.writeBuffer(buffer);
-                    }
-                    pause(1);    
-                }
-            })
         }
 
         readString(): string {
             const buf = this.serialDevice.readBuffer();
             this.decoder.add(buf);
             return this.decoder.decode();
+        }
+
+        readBuffer():Buffer {
+            const buf = this.serialDevice.readBuffer();
+            return buf
         }
 
         readLine(timeOut?: number): string {
@@ -73,8 +55,9 @@ namespace serial {
         writeString(text: string) {
             if (!text) return;
             const buf = control.createBufferFromUTF8(text);
-            this.txbuffers.push(buf);
-            this.startTxTransfer();
+            this.serialDevice.writeBuffer(buf);
+            // this.txbuffers.push(buf);
+            // this.startTxTransfer();
         }
 
         writeLine(text: string) {
@@ -83,8 +66,9 @@ namespace serial {
         }
 
         writeBuffer(buf:Buffer) {
-            this.txbuffers.push(buf);
-            this.startTxTransfer();
+            this.serialDevice.writeBuffer(buf);
+            // this.txbuffers.push(buf);
+            // this.startTxTransfer();
         }
     }
 
@@ -241,8 +225,9 @@ namespace serial {
     export function writeBuffer(buffer: Buffer) {
         const ser = device();
         if (ser)
-            ser.txbuffers.push(buffer);
-            ser.startTxTransfer();
+            ser.writeBuffer(buffer);
+            //ser.txbuffers.push(buffer);
+            //ser.startTxTransfer();
             
     }
 

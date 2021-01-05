@@ -33,7 +33,11 @@
         "forever.ts",
         "utfdecoder.ts",
         "scheduling.ts",
-        "controlmessage.ts"
+        "controlmessage.ts",
+        "json.h",
+        "json.cpp",
+        "json-common.cpp",
+        "codaljson.ts"
     ],
     "testFiles": [
         "test.ts"

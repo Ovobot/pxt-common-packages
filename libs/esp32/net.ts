@@ -20,6 +20,7 @@ namespace esp32 {
             //pause(2000);
              _defaultController = new ATController(dev);
              let c = _defaultController as esp32.ATController;
+             c.startATBackgroundTask();
             while(!c.isEsp32Ready){
                 pause(10);
             }
@@ -63,5 +64,5 @@ namespace esp32 {
 
     // initialize net
     //console.log("init default controller");
-    new net.Net(defaultController);
+    //new net.Net(defaultController);
 }

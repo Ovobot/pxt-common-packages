@@ -42,6 +42,7 @@ namespace esp32 {
         private errorCode: number = 0;
         private srHandler: (data: string) => void = null;
         private netResultHandler: (data: string) => void = null;
+        private atResultHanlder: (data: string[]) => void = null;
         private wkupHandler: () => void = null;
         private mqttCb: ((data: string) => void)[] = [null, null, null, null, null, null, null, null];
         private mqttCbCnt: number = 0;
@@ -54,121 +55,217 @@ namespace esp32 {
         private iotClient:string = "";
         private netRequestResult:string = "";
         private rssi:number = 0;
+        private waitingHttpResult:boolean = false 
+
         //private voiceReg = /AT+VOICE=/;
         constructor(private ser: serial.Serial) {
             super();
-            this.ser.serialDevice.setTxBufferSize(150);
-            this.ser.serialDevice.setRxBufferSize(200);
-            this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
+            this.ser.serialDevice.setTxBufferSize(128);
+            this.ser.serialDevice.setRxBufferSize(512);
+            //this.ser.serialDevice.setBaudRate(BaudRate.BaudRate115200);
+        }
+
+        parseIntRadix(s: string, base?: number) {
+            if (base == null || base == 10) {
+                return parseFloat(s) | 0
+            }
+    
+            let m = false
+            let r = 0
+            for (let i = 0; i < s.length; ++i) {
+                let c = s.charCodeAt(i)
+                if (c == 0x20 || c == 10 || c == 13 || c == 9)
+                    continue
+                if (r == 0 && !m && c == 0x2d) {
+                    m = true
+                    continue
+                }
+    
+                let v = -1
+                if (0x30 <= c && c <= 0x39)
+                    v = c - 0x30
+                else {
+                    c |= 0x20
+                    if (0x61 <= c && c <= 0x7a)
+                        v = c - 0x61 + 10
+                }
+    
+                if (0 <= v && v < base) {
+                    r *= base
+                    r += v
+                } else {
+                    return undefined
+                }
+            }
+    
+            return m ? -r : r
+        }
+
+        public startATBackgroundTask() {
             let line = "";
             let lines: string[] = [];
+            let resLines: string[] = [];
             let topic = '';
             let handleIndex:number = -1;
             let currentAckCmd:string = "";
-            this.ser.serialDevice.onDelimiterReceived(Delimiters.NewLine, function () {
-
-                line = this.ser.readNewLine();
-                console.log(line);
-                if (line == "ready" && !this.esp32Ready) {
-                    //it is first launch 
-                    this.esp32Ready = true;
-                    // this.status = ATStatus.Ok;
-                    // this.ackState = ATAckState.Tail;
-                }
-                if(this.voiceCmdNow) {
-                    if(line.indexOf("AT+VOICE=") != -1) {
-                        line = this.ser.readString();
-                        console.log("voice res:" + line);
-                        if(line == ">") {
-                            console.log("voice input");
-                            this.status = ATStatus.Ok;
-                            this.ackState = ATAckState.Tail;
-                        } else {
-                            this.status = ATStatus.Error;
-                            this.ackState = ATAckState.Tail;
+            let allStr:string = ''
+            let getVoiceInputFlag = false
+            let getHttpResultFlag = false
+            //read thread   
+            control.runInBackground(() => {
+                // send command
+                while(1) {
+                    if (this.waitingHttpResult) {
+                        
+                    } else {
+                        line = this.ser.readString()
+                        if(line.length > 0) {
+                            resLines.push(line)
                         }
-                    }
-                }
-                if (this.httpUserCmdNow) {
-                    if(line.indexOf("AT+HTTPREQUEST=") != -1) {
-                        line = this.ser.readString();
-                        console.log("http at res:" + line);
-                        if(line == ">") {
-                            console.log("http url input");
-                            this.status = ATStatus.Ok;
-                            this.ackState = ATAckState.Tail;
-                        } else {
-                            this.status = ATStatus.Error;
-                            this.ackState = ATAckState.Tail;
+    
+                        while(resLines.length) {
+                            // console.log(line)
+                            let tmline = resLines[0]
+                            allStr += tmline
+                            resLines.removeElement(tmline)
                         }
-                    }
-                }
-                if (line.length >= 2 && line.charAt(0) == 'A' && line.charAt(1) == 'T' && this.ackState == ATAckState.None) {
-                    this.ackState = ATAckState.Head;
-                    currentAckCmd = line;
-                } else if (this.ackState != ATAckState.None &&  this.status != ATStatus.Ok) {
-                    if (line == "OK") {
-                        this.status = ATStatus.Ok;
-                        this.ackState = ATAckState.Tail;
-                    } else if (line == "ERROR") {
-                        console.log('error');
-                        this.status = ATStatus.Error;
-                        this.ackState = ATAckState.Tail;
-                    } else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:") {
-                        console.log('error code');
-                        this.errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16);
-                    }  else if(line.length) {
-                        this.ackState = ATAckState.Content;
-                        lines.push(line);
-                    }     
-                }
-                if (this.ackState == ATAckState.Tail) {
-                    //call handles
-                    this.ackState = ATAckState.None;
-                    const ahs =  this.atHandles as ((response: ATResponse) => void)[];
-                    if (ahs.length) {
-                        const ah = ahs.shift();
-                        ah({ status: this.status, errorCode: this.errorCode, lines: lines });
-                    }
-                    if (currentAckCmd == 'AT+SPEECHRES' && this.srHandler) {
-                        let result = lines[0];
-                        if (result != undefined) {
-                            this.currentSpeechRes = result;
-                            this.srHandler(result);
-                        }
-                    }
-                    if (currentAckCmd == 'AT+WAKE' && this.wkupHandler) {
-                        this.wkupHandler();
-                    }
-                    if (currentAckCmd.indexOf("AT+SUBRES=") != -1) {
-                        topic = currentAckCmd.substr(19);
-                        const mqcbkey = this.mqttCbKey as string[];
-                        for (let i = 0; i < mqcbkey.length; i++) {
-                            let cbKey = mqcbkey[i];
-                            if(topic == cbKey) {
-                                handleIndex = i;
-                                break;
-                            } 
-                        }
-
-                        if(handleIndex != -1) {
-                            const mqCb =  this.mqttCb as ((data: string) => void)[];
-                            mqCb[handleIndex](lines[0]);
-                        }
-                        if(this.mqttCbTopicData){
-                            const mqCb =  this.mqttCbTopicData as  (topic: string, data: string) => void
-                            mqCb(topic,lines[0]);
-                        }
-                    }
-                    this.atready = true;
-                    handleIndex = -1;
-                    lines = [];
-                    line = "";
-                    this.status = ATStatus.None;
-                    this.errorCode = 0;
-                }
                 
+                        if(allStr.length) {
+                            let anslines = allStr.split("\r\n")
+                            if(this.atResultHanlder) {
+                                this.atResultHanlder(anslines);
+                            }
+                            while(anslines.length) {
+                                line = anslines[0]
+                                console.log("rec>" + line);
+                                if (line == "ready" && !this.esp32Ready) {
+                                    //it is first launch 
+                                    this.esp32Ready = true;
+                                    // this.status = ATStatus.Ok;
+                                    // this.ackState = ATAckState.Tail;
+                                } else if(line == "WIFI GOT IP") {
+                                    if(this.wifiConnResponse) {
+                                        this.wifiConnResponse.status = ATStatus.Ok;
+                                    } 
+                                } else if(line == "WIFI DISCONNECT") {
+                                    if(this.wifiConnResponse) {
+                                        this.wifiConnResponse.status = ATStatus.Error;
+                                    } 
+                                }
+
+                                if(this.voiceCmdNow) {
+                                    if(line.indexOf("AT+VOICE=") != -1) {
+                                        getVoiceInputFlag = true
+                                        
+                                    } else if (getVoiceInputFlag) {
+                                        getVoiceInputFlag = false;
+                                        if(line == ">") {
+                                            console.log("voice input");
+                                            this.status = ATStatus.Ok;
+                                            this.ackState = ATAckState.Tail;
+                                        } else {
+                                            this.status = ATStatus.Error;
+                                            this.ackState = ATAckState.Tail;
+                                        }
+                                    }
+    
+                                }
+                                if (this.httpUserCmdNow) {
+                                    if(line.indexOf("AT+HTTPREQUEST=") != -1) {
+                                        getHttpResultFlag = true;
+                                        
+                                    } else if (getHttpResultFlag) {
+                                        getHttpResultFlag = false;
+                                        if(line == ">") {
+                                            this.waitingHttpResult = true;
+                                            console.log("http url input");
+                                            this.status = ATStatus.Ok;
+                                            this.ackState = ATAckState.Tail;
+                                        } else {
+                                            this.status = ATStatus.Error;
+                                            this.ackState = ATAckState.Tail;
+                                        }
+                                    }
+                                }
+                                if (line.length >= 2 && line.charAt(0) == 'A' && line.charAt(1) == 'T' && this.ackState == ATAckState.None) {
+                                    this.ackState = ATAckState.Head;
+                                    currentAckCmd = line;
+                                } else if (this.ackState != ATAckState.None &&  this.status != ATStatus.Ok) {
+                                    if (line == "OK") {
+                                        this.status = ATStatus.Ok;
+                                        this.ackState = ATAckState.Tail;
+                                    } else if (line == "ERROR") {
+                                        console.log('error');
+                                        this.status = ATStatus.Error;
+                                        this.ackState = ATAckState.Tail;
+                                    } else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:") {
+                                        console.log('error code');
+                                        this.errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16);
+                                    }  else if(line.length) {
+                                        this.ackState = ATAckState.Content;
+                                        lines.push(line);
+                                    }     
+                                }
+                                if (this.ackState == ATAckState.Tail) {
+                                    //call handles
+                                    this.atready = true;
+                                    this.ackState = ATAckState.None;
+                                    const ahs =  this.atHandles as ((response: ATResponse) => void)[];
+                                    if (ahs.length) {
+                                        const ah = ahs.shift();
+                                        ah({ status: this.status, errorCode: this.errorCode, lines: lines });
+                                    }
+                                    if (currentAckCmd == 'AT+SPEECHRES' && this.srHandler) {
+                                        let result = lines[0];
+                                        if (result != undefined) {
+                                            this.currentSpeechRes = result;
+                                            this.srHandler(result);
+                                        }
+                                    }
+                                    if (currentAckCmd == 'AT+WAKE' && this.wkupHandler) {
+                                        this.wkupHandler();
+                                    }
+                                    if (currentAckCmd.indexOf("AT+SUBRES=") != -1) {
+                                    //     //let len =   "AT+SUBRES=".length;
+                                        topic = currentAckCmd.substr(19);
+                                    //     const mqcbkey = this.mqttCbKey as string[];
+                                    //     for (let i = 0; i < mqcbkey.length; i++) {
+                                    //         let cbKey = mqcbkey[i];
+                                    //         if(topic == cbKey) {
+                                    //             handleIndex = i;
+                                    //             break;
+                                    //         } 
+                                    //     }
+    
+                                    //     if(handleIndex != -1) {
+                                    //         const mqCb =  this.mqttCb as ((data: string) => void)[];
+                                    //         mqCb[handleIndex](lines[0]);
+                                    //     }
+                                        if(this.mqttCbTopicData){
+                                            const mqCb =  this.mqttCbTopicData as  (topic: string, data: string) => void
+                                            if(lines.length > 0) {
+                                                mqCb(topic,lines[0]);    
+                                            }
+    
+                                        }
+                                    }
+                                    handleIndex = -1;
+                                    lines = [];
+                                    line = "";
+                                    currentAckCmd = "";
+                                    this.status = ATStatus.None;
+                                    this.errorCode = 0;
+                                }
+                                anslines.removeAt(0)
+                            }
+                            allStr = ''
+                        }
+                    }
+                    pause(1);
+                }
+
             });
+            //write thread    
             control.runInBackground(() => {
                 // send command
                 while(1) {
@@ -207,44 +304,6 @@ namespace esp32 {
                 }
 
             });
-        }
-
-        
-
-        parseIntRadix(s: string, base?: number) {
-            if (base == null || base == 10) {
-                return parseFloat(s) | 0
-            }
-    
-            let m = false
-            let r = 0
-            for (let i = 0; i < s.length; ++i) {
-                let c = s.charCodeAt(i)
-                if (c == 0x20 || c == 10 || c == 13 || c == 9)
-                    continue
-                if (r == 0 && !m && c == 0x2d) {
-                    m = true
-                    continue
-                }
-    
-                let v = -1
-                if (0x30 <= c && c <= 0x39)
-                    v = c - 0x30
-                else {
-                    c |= 0x20
-                    if (0x61 <= c && c <= 0x7a)
-                        v = c - 0x61 + 10
-                }
-    
-                if (0 <= v && v < base) {
-                    r *= base
-                    r += v
-                } else {
-                    return undefined
-                }
-            }
-    
-            return m ? -r : r
         }
 
         /**
@@ -402,21 +461,15 @@ namespace esp32 {
         }
 
         public wifiConnect(ssid:string,password:string){
-                this.currentSsid = ssid;
-                this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
-                    if(resp.status == ATStatus.Ok) {
-                        this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
-                            //console.log(resp.lines);
-                            this.wifiConnResponse = resp;
-                        }); 
-                    }
-                });
-        }
-
-        public setSpeechTime(time:number) {
-            let r =  Math.constrain(time, 1, 4);
-            this.sendNewAT("SPEECH="+time);
-            //pause(time * 1000);
+            this.currentSsid = ssid;
+            this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
+                if(resp.status == ATStatus.Ok) {
+                    this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
+                        //console.log(resp.lines);
+                        this.wifiConnResponse = resp;
+                    }); 
+                }
+            });
         }
 
         public startVoiceInput() {
@@ -525,6 +578,7 @@ namespace esp32 {
                             
                             pause(10);
                         }
+                        this.waitingHttpResult = false;
                         console.log("http over");    
                     });
                 }
@@ -560,6 +614,10 @@ namespace esp32 {
 
         public registerNetRequestResponse(handler: (message: string) => void) {
             this.netResultHandler = handler;
+        }
+
+        public registerATResponse(handler:(message:string[]) => void) {
+            this.atResultHanlder = handler;
         }
 
         public registerWakeupResponse(handler: () => void) {

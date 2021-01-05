@@ -1,9 +1,3 @@
-/**
- * Networking, WiFi, web requests
- */
-//% weight=1
-//% advanced=true
-//% icon="\uf1eb" color="#8446cf"
 namespace net {
     /**
      * Default priority of net log messages

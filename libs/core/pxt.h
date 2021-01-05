@@ -93,6 +93,11 @@ uint32_t readButtonMultiplexer(int bits);
 void disableButtonMultiplexer();
 }
 
+namespace codalJson {
+    class CodalJsonObject;
+}
+typedef codalJson::CodalJsonObject* codalJsonObject;
+
 namespace serial {
 class CodalSerialDeviceProxy;
 }

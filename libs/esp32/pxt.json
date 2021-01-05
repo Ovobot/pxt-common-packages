@@ -6,7 +6,10 @@
         "ninacontroller.ts",
         "atcontroller.ts",
         "speech.ts",
+        "wifi.ts",
+        "netrequest.ts",
         "tsconfig.json",
+        "atcmd.ts",
         "README.md"
     ],
     "testFiles": [

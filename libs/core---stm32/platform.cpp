@@ -2,7 +2,7 @@
 #include "STMLowLevelTimer.h"
 #include "Accelerometer.h"
 #include "light.h"
-
+#include "cJSON.h"
 namespace pxt {
 
 struct TimerConfig {
@@ -220,6 +220,11 @@ void platform_init() {
     set_if_present(CFG_PIN_JACK_SND, 0);
     set_if_present(CFG_PIN_JACK_HPEN, 0);
     set_if_present(CFG_PIN_JACK_BZEN, 1);
+
+    cJSON_Hooks hooks;
+    hooks.malloc_fn = xmalloc;
+    hooks.free_fn = xfree;
+    cJSON_InitHooks(&hooks);
 
     /*
         if (*HF2_DBG_MAGIC_PTR == HF2_DBG_MAGIC_START) {

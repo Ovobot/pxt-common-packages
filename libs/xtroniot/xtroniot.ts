@@ -36,20 +36,6 @@ namespace xtroniot {
     }
 
     /**
-     * On MQTT subscribe message callback install
-     * @param topic Mqtt topic; eg: /hello
-     * @param handler Mqtt topic message callback;
-    */
-    //% blockId=on_mqtt_message block="on topic|%topic callback"
-    //% weight=82
-    export function onMqttMessage(topic: string, handler: (message: string) => void): void {
-        let c =  esp32.defaultController() as esp32.ATController;
-        if (c) {
-            c.onsubResponse(topic,handler);
-        }
-    }
-
-        /**
      * On MQTT got any topic and message
      * @param handler Mqtt topic message callback;
     */

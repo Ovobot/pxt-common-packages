@@ -46,6 +46,29 @@ namespace lego {
             return Buffer.concat([stx,buffer2,crc_buf]);
         }
 
+        public mavlinkPackCtrlMotor(output1:number,output2:number,srcSystem?:number, srcComponent?:number) : Buffer{
+            let stx = pins.createBuffer(1)
+            stx[0] = MAVLINK_STX;
+            let buffer2 = pins.createBuffer(7)
+            buffer2[0] = 0x02;
+            buffer2[1] = this.seq;
+            buffer2[2] = ( typeof srcSystem === 'undefined' ) ? 1 : srcSystem;
+            buffer2[3] = ( typeof srcComponent === 'undefined' ) ? 1 : srcComponent;
+            buffer2[4] = MAVLINK_MSG_ID_CTRL_MOTOR;//msg id
+            buffer2[5] = output1;//
+            buffer2[6] = output2;//
+            let checksum = this.calculateChecksum(buffer2);
+            let crc_extrabuf = pins.createBuffer(1)
+            crc_extrabuf[0] = 97;
+            checksum = this.calculateChecksum(crc_extrabuf,checksum);
+            let crc_buf = pins.createBuffer(2)
+        
+            crc_buf[0] = checksum&0xff;
+            crc_buf[1] = checksum>>8;
+            this.seq = (this.seq + 1) % 256;
+        
+            return Buffer.concat([stx,buffer2,crc_buf]);
+        }
 
     }
 }
