@@ -35,6 +35,11 @@ void setScreenBrightness(int level) {
 }
 
 //% expose
+void setScreenSleep(int sleepMode) {
+    // TODO
+}
+
+//% expose
 void setPalette(Buffer buf) {
     auto display = getWDisplay();
     if (48 != buf->length)

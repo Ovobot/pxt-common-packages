@@ -87,11 +87,20 @@ interface ScreenImage extends Image {
     //% helper=setScreenBrightness
     setBrightness(deg: number): Image;
 
+    //% helper=setScreenBrightnessZero
+    setBrightnessZero():Image;
+
     /**
      * Gets current screen backlight brightness (0-100)
      */
     //% helper=screenBrightness
     brightness(): number;
+
+    //% helper=setScreenSleep
+    setSleep(sleepMode:boolean):void;
+
+    //% helper=setScreenWake
+    setWake():void;
 }
 
 // pxt compiler currently crashes on non-functions in helpers namespace; will fix
@@ -209,10 +218,28 @@ namespace helpers {
     //% shim=pxt::setScreenBrightness
     function _setScreenBrightness(brightness: number) { }
 
+    //% shim=pxt::setScreenSleep
+    function _setScreenSleep(mode: boolean) { }
+
+    //% shim=pxt::setScreenWake
+    function _setScreenWake() {}
+
     export function setScreenBrightness(img: Image, b: number) {
         b = Math.clamp(10, 100, b | 0);
         _helpers_workaround.brightness = b
         _setScreenBrightness(_helpers_workaround.brightness)
+    }
+
+    export function setScreenBrightnessZero(img:Image) {
+        _setScreenBrightness(0)
+    }
+
+    export function setScreenSleep(img: Image, mode:boolean) {
+        _setScreenSleep(mode)
+    }
+
+    export function setScreenWake() {
+        _setScreenWake()
     }
 
     export function screenBrightness(img: Image) {

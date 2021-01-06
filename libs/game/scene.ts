@@ -181,6 +181,8 @@ namespace scene {
                         screen.setBrightness(brightness)
                     else     
                         screen.setBrightness(100);
+
+                    screen.setSleep(false);
                     power.poke();
                 }
             });

@@ -220,7 +220,7 @@ namespace controller {
 
     export function _player1(): Controller {
         if (!_players || !_players[0])
-            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B, controller.menu]);
+            new Controller(1, [controller.left, controller.up, controller.right, controller.down, controller.A, controller.B,controller.C, controller.menu, controller.start]);
         return _players[0];
     }
 

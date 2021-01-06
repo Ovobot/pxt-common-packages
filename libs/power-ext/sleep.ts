@@ -113,6 +113,11 @@ namespace sleep {
             this.sleepData = [15000,30000,60000,120000,300000,-1];
             this.screenSleepIndex = this.sleepData.indexOf(this.defaultScreenSleepTime);
             this.deepSleepIndex = this.sleepData.indexOf(this.defaultSleepTime);
+            if(this.deepSleepIndex < 0) {
+                this.deepSleepIndex = 4;
+                settings.writeNumber("#deepsleep", 300000);
+                power.setDeepSleepTimeout(300000);  
+            }
         }
 
         main() {

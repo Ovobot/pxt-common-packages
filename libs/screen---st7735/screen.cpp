@@ -215,6 +215,15 @@ class WDisplay {
         else
             return smart->sendIndexedImage(src, width, height, palette);
     }
+
+    int setSleep(bool sleepMode) {
+        if (lcd) {
+            return lcd->setSleep(sleepMode);
+        }
+            
+        return -1;    
+    }
+
 };
 
 SINGLETON_IF_PIN(WDisplay, DISPLAY_MOSI);
@@ -238,6 +247,14 @@ int setScreenBrightnessSupported() {
 #else
     return 1;
 #endif
+}
+
+//%
+void setScreenSleep(bool sleepMode) {
+    auto display = getWDisplay();
+    if (!display)
+        return ;    
+    display->setSleep(sleepMode);    
 }
 
 //%

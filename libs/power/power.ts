@@ -60,7 +60,8 @@ namespace power {
         if (to > 0 && 
             control.millis() - p > to &&
             !control.isUSBInitialized()) {
-            screen.setBrightness(0);
+            screen.setBrightnessZero();
+            screen.setSleep(true);
             _screenSleep = true;
         }
 
@@ -87,10 +88,10 @@ namespace power {
         _timeout =  settings.readNumber("#deepsleep");
         _screenout = settings.readNumber("#screensleep");
         if (_timeout == undefined) {
-            _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
+            _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, 1) * 1000;
             // ensure deepsleep is long enough
             const minDeepSleepTimeout = 300000;
-            if (_timeout > 0 && _timeout < minDeepSleepTimeout)
+            if (_timeout > 0 || _timeout < minDeepSleepTimeout)
                 _timeout = minDeepSleepTimeout;
             settings.writeNumber("#deepsleep", _timeout)
         }
