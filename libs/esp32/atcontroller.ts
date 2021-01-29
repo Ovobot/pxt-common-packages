@@ -24,29 +24,31 @@ namespace esp32 {
      * Controller for AT command set https://github.com/espressif/esp-at/blob/master/docs/ESP_AT_Commands_Set.md
      */
 
+    class ATSeq {
+        cmd:string;
+        containCb:boolean;
+        constructor(cmd:string,cb:boolean) {
+            this.cmd = cmd;
+            this.containCb = cb;
+        }
+    } 
 
     export class ATController extends net.Controller {
         private prefix = "AT";
         private newLine = "\r\n";
         private wifiConnResponse:ATResponse = undefined;
-        private currentSpeechRes = "";
         private mqttCbTopicData: (topic: string, data: string) => void = null;
         private mWakeUp = false;
         private atHandles:((response: ATResponse) => void)[] = [];
-        private cacheHandles:((response: ATResponse) => void)[] = [];
 
         private ackState:ATAckState = ATAckState.None;
-        private atcmds:string[] = []; 
-        private cachecmds:string[] = []; 
+        private atcmds:ATSeq[] = []; 
         private status:ATStatus = ATStatus.None;
         private errorCode: number = 0;
         private srHandler: (data: string) => void = null;
         private netResultHandler: (data: string) => void = null;
         private atResultHanlder: (data: string[]) => void = null;
         private wkupHandler: () => void = null;
-        private mqttCb: ((data: string) => void)[] = [null, null, null, null, null, null, null, null];
-        private mqttCbCnt: number = 0;
-        private mqttCbKey: string[] = ['', '', '', '', '', '', '', ''];
         private atready:boolean = true;
         private currentSsid:string = '';
         private voiceCmdNow:boolean = false;
@@ -56,7 +58,7 @@ namespace esp32 {
         private netRequestResult:string = "";
         private rssi:number = 0;
         private waitingHttpResult:boolean = false 
-
+        private currentAtseq:ATSeq
         //private voiceReg = /AT+VOICE=/;
         constructor(private ser: serial.Serial) {
             super();
@@ -146,12 +148,14 @@ namespace esp32 {
                                 } else if(line == "WIFI GOT IP") {
                                     if(this.wifiConnResponse) {
                                         this.wifiConnResponse.status = ATStatus.Ok;
-                                    } 
+                                    } else {
+                                        this.wifiConnResponse = { status: ATStatus.Ok, errorCode: this.errorCode, lines: [] };
+                                    }
                                 } else if(line == "WIFI DISCONNECT") {
                                     if(this.wifiConnResponse) {
                                         this.wifiConnResponse.status = ATStatus.Error;
                                     } 
-                                }
+                                } 
 
                                 if(this.voiceCmdNow) {
                                     if(line.indexOf("AT+VOICE=") != -1) {
@@ -195,11 +199,9 @@ namespace esp32 {
                                         this.status = ATStatus.Ok;
                                         this.ackState = ATAckState.Tail;
                                     } else if (line == "ERROR") {
-                                        console.log('error');
                                         this.status = ATStatus.Error;
                                         this.ackState = ATAckState.Tail;
                                     } else if (line.substr(0, "ERR CODE:".length) == "ERR CODE:") {
-                                        console.log('error code');
                                         this.errorCode = this.parseIntRadix(line.substr("ERR CODE:".length + 2),16);
                                     }  else if(line.length) {
                                         this.ackState = ATAckState.Content;
@@ -211,14 +213,14 @@ namespace esp32 {
                                     this.atready = true;
                                     this.ackState = ATAckState.None;
                                     const ahs =  this.atHandles as ((response: ATResponse) => void)[];
-                                    if (ahs.length) {
+                                    if (ahs.length && this.currentAtseq && this.currentAtseq.containCb) {
+                                        this.currentAtseq = undefined
                                         const ah = ahs.shift();
                                         ah({ status: this.status, errorCode: this.errorCode, lines: lines });
                                     }
                                     if (currentAckCmd == 'AT+SPEECHRES' && this.srHandler) {
                                         let result = lines[0];
                                         if (result != undefined) {
-                                            this.currentSpeechRes = result;
                                             this.srHandler(result);
                                         }
                                     }
@@ -226,28 +228,18 @@ namespace esp32 {
                                         this.wkupHandler();
                                     }
                                     if (currentAckCmd.indexOf("AT+SUBRES=") != -1) {
-                                    //     //let len =   "AT+SUBRES=".length;
-                                        topic = currentAckCmd.substr(19);
-                                    //     const mqcbkey = this.mqttCbKey as string[];
-                                    //     for (let i = 0; i < mqcbkey.length; i++) {
-                                    //         let cbKey = mqcbkey[i];
-                                    //         if(topic == cbKey) {
-                                    //             handleIndex = i;
-                                    //             break;
-                                    //         } 
-                                    //     }
-    
-                                    //     if(handleIndex != -1) {
-                                    //         const mqCb =  this.mqttCb as ((data: string) => void)[];
-                                    //         mqCb[handleIndex](lines[0]);
-                                    //     }
-                                        if(this.mqttCbTopicData){
-                                            const mqCb =  this.mqttCbTopicData as  (topic: string, data: string) => void
-                                            if(lines.length > 0) {
-                                                mqCb(topic,lines[0]);    
+                                        let len =   "AT+SUBRES=".length + this.iotClient.length + 1
+                                        //if speed fast uart may lost data so compare here is safe
+                                        if(currentAckCmd.length > len) {
+                                            topic = currentAckCmd.substr(19);
+                                            if(this.mqttCbTopicData){
+                                                const mqCb =  this.mqttCbTopicData as  (topic: string, data: string) => void
+                                                if(lines.length > 0) {
+                                                    mqCb(topic,lines[0]);    
+                                                }
                                             }
-    
-                                        }
+                                        } 
+
                                     }
                                     handleIndex = -1;
                                     lines = [];
@@ -272,34 +264,28 @@ namespace esp32 {
                     if(this.atcmds.length) {
                         if (this.atready) {
                             this.atready = false;
-                            const cmd = this.atcmds.shift();
+                            const atseq = this.atcmds.shift() as ATSeq;
+                            this.currentAtseq = atseq;
                             //console.log("c->:" + cmd);
-                            if(cmd.indexOf("AT+VOICE=") != -1){
+                            if(atseq.cmd.indexOf("AT+VOICE=") != -1){
                                 this.voiceCmdNow = true;
                             } else {
                                 this.voiceCmdNow = false;
                             }
-                            if(cmd.indexOf("AT+HTTPREQUEST=") != -1) {
+                            if(atseq.cmd.indexOf("AT+HTTPREQUEST=") != -1) {
                                 this.httpUserCmdNow = true;
                             } else {
                                 this.httpUserCmdNow = false;
                             }
                             // send over
-                            this.ser.writeString(cmd);
+                            this.ser.writeString(atseq.cmd);
                             // if(this.voiceCmdNow) {
                             //     let res = this.ser.readString();
                             //     //console.log("res:"+res);
                             // }
                         }
                         
-                    } else {
-                        if (this.atready){
-                            if (this.cachecmds.length) {
-                                this.atcmds.push(this.cachecmds.shift());
-                                this.atHandles.push(this.cacheHandles.shift());
-                            }
-                        }
-                    }
+                    } 
                     pause(1);
                 }
 
@@ -345,8 +331,25 @@ namespace esp32 {
             return { status: status, errorCode: errorCode, lines: lines };
         }
 
-        private sendNewAT(command: string, args?: any[], callback?: (response: ATResponse) => void) {
-            if(this.cachecmds.length > 10) {
+        private sendnow(cmd:string) {
+            this.atready = false;
+            //console.log("c->:" + cmd);
+            if(cmd.indexOf("AT+VOICE=") != -1){
+                this.voiceCmdNow = true;
+            } else {
+                this.voiceCmdNow = false;
+            }
+            if(cmd.indexOf("AT+HTTPREQUEST=") != -1) {
+                this.httpUserCmdNow = true;
+            } else {
+                this.httpUserCmdNow = false;
+            }
+            // send over
+            this.ser.writeString(cmd);
+        }
+
+        private sendNewAT(command: string, args?: any[], callback?: (response: ATResponse) => void, dispatchFirst?:boolean) {
+            if(this.atcmds.length > 10) {
                 console.log("cmd buf full");
                 return;
             }
@@ -360,18 +363,40 @@ namespace esp32 {
             if (args && args.length > 0) {
                 txt += "=" + args.map(arg => "\""  + arg + "\"").join(",");
             }
-            txt += this.newLine;            
+            txt += this.newLine; 
+      
             if (callback) {
-                if(this.atready) {
+                if(this.atcmds.length == 0 && this.atready) {
                     this.atHandles.push(callback);
-                    this.atcmds.unshift(txt);
+                    this.currentAtseq = new ATSeq(txt,true);
+                    this.sendnow(txt);
                 } else {
-                    this.cacheHandles.push(callback);
-                    this.cachecmds.push(txt);
+                    if(this.atready) {
+                        if(dispatchFirst) {
+                            this.atHandles.unshift(callback);
+                            let mtempAt = new ATSeq(txt,true);
+                            this.atcmds.unshift(mtempAt);
+                        } else {
+                            this.atHandles.push(callback);
+                            let mtempAt = new ATSeq(txt,true);
+                            this.atcmds.push(mtempAt);
+                        }     
+                    } else {
+                        this.atHandles.push(callback);
+                        let mtempAt = new ATSeq(txt,true);
+                        this.atcmds.push(mtempAt);
+                    }
                 }
+
                 
             } else {
-                this.atcmds.push(txt);
+                if(this.atcmds.length == 0 && this.atready) {
+                    this.currentAtseq = undefined;
+                    this.sendnow(txt);
+                } else {
+                    let mtempAt = new ATSeq(txt,false);
+                    this.atcmds.push(mtempAt);
+                }
             }
             
         }
@@ -421,21 +446,60 @@ namespace esp32 {
         }
 
         public scanNetworks(): net.AccessPoint[] {
-            let aps = []
-            this.sendNewAT('CWLAP',[],function(resp:ATResponse) {
-                
+            let APs:net.AccessPoint[] = []
+            this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
                 if(resp.status == ATStatus.Ok) {
-                    let apinfos = resp.lines;
-                    for (let apinfo of apinfos) {
-                       if (apinfo.length >  "+CWLAP:".length) {
-                         let ap =  apinfo.substr("+CWLAP:".length)
-                         console.log(ap);
-                       }
-
-                    }
-                    
+                    this.sendNewAT('CWLAP',[],function(resp:ATResponse) {
+                
+                        if(resp.status == ATStatus.Ok) {
+                            let apinfos = resp.lines;
+                            for (let apinfo of apinfos) {
+                               if (apinfo.length >  "+CWLAP:".length) {
+                                 let ap =  apinfo.substr("+CWLAP:".length)
+                                 console.log(ap);
+                               }
+        
+                            }
+                            
+                        } else {
+                            //wait wifi connected
+                            // while (!this.isConnected) {
+                            //     pause(1)
+                            // }
+                            control.runInParallel(() => {
+                                
+                                while (!this.isConnected) {
+                                    pause(5)
+                                }
+                                this.sendNewAT('CWLAP',[],function(resp:ATResponse) {
+                                    if(resp.status == ATStatus.Ok) {
+                                        let apinfos = resp.lines;
+                                        console.log(apinfos.length);
+                                        // for (let apinfo of apinfos) {
+                                        //    //if (apinfo.length >  "+CWLAP:".length) {
+                                        //      //let ap =  apinfo.substr("+CWLAP:".length)
+                                        //      //console.log(apinfo.split(","));
+                                        //    //}
+                                        //    let aparrs = apinfo.split(",");
+                                           
+                                        //    let name = aparrs[1];
+                                        //    let a_p = new net.AccessPoint(name)
+                                        //    let rssi = aparrs[2];
+                                        //    a_p.rssi = parseInt(rssi)
+                                        //    let encr = aparrs[0].substr("+CWLAP:".length)
+                                        //    a_p.encryption = parseInt(encr)
+                                        //    console.log(name);
+                                        //    APs.push(a_p)
+                                        // }
+                                    }
+                                },true);
+                
+                            })
+                        }
+                    },true);
                 }
             });
+            
             return [];
         }
 
@@ -467,13 +531,17 @@ namespace esp32 {
                     this.sendNewAT("CWJAP",[ssid,password],function(resp:ATResponse){
                         //console.log(resp.lines);
                         this.wifiConnResponse = resp;
-                    }); 
+                    },true); 
                 }
             });
         }
 
         public startVoiceInput() {
             this.sendNewAT("SPEECHINPUT");
+        }
+
+        public setSRCloud(cloud:number) {
+            this.sendNewAT("SRCLOUD="+cloud);    
         }
 
         // lengthInUtf8Bytes(str:string) {
@@ -594,8 +662,8 @@ namespace esp32 {
             this.sendNewAT("MQTT",["ovobotiot.cn",client]); 
         }
 
-        public pubTopicMessage(topic: string, message: string) {
-            let finalTopic = this.iotClient + '/' + topic;
+        public pubTopicMessage(topic: string, chart:string, message: string) {
+            let finalTopic = this.iotClient + '/' + topic + '/' + chart;
             this.sendNewAT("PUB",[finalTopic,message]); 
         }
 
@@ -623,14 +691,6 @@ namespace esp32 {
         public registerWakeupResponse(handler: () => void) {
             this.wkupHandler = handler;
         }
-        
-
-        public onsubResponse(topic: string, handler: (message: string) => void){
-            if (this.mqttCbCnt >= 8) return;
-            this.mqttCb[this.mqttCbCnt] = handler;
-            this.mqttCbKey[this.mqttCbCnt] = topic;
-            this.mqttCbCnt++;
-        }
 
         public setSpeechWkWord(wkword:number){
             this.sendNewAT("SPEECHWAKE="+wkword);
@@ -640,14 +700,13 @@ namespace esp32 {
             this.sendNewAT("SPEECHLANG",[lang]);
         }
 
+        public setGoogleSRLang(lang:string){
+            this.sendNewAT("GSRLANG",[lang]);
+        }
+
         public getSpeechRecResult() {
             this.sendNewAT("SPEECHRES");
         }
-
-        public isSpeechResContain(str:string):boolean{
-            return this.currentSpeechRes.indexOf(str) > -1;
-        }
-
 
         public getRssi():number{
             this.sendNewAT("CWMODE=1",[],function(resp:ATResponse) {
@@ -657,7 +716,7 @@ namespace esp32 {
                         let res1 = resp.lines[0];
                         let sep = res1.split(",");
                         this.rssi = parseInt(sep[2]);
-                    }); 
+                    },true); 
                 }
             });
             return this.rssi;

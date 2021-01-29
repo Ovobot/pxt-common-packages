@@ -33,7 +33,7 @@ namespace lightext {
             _defaultStrip._mode = NeoPixelMode.RGB;
             _defaultStrip._dataPin = mosi;
             _defaultStrip._clkPin = sck;
-            _defaultStrip._length = 4;
+            _defaultStrip._length = 8;
         }
 
         return _defaultStrip;

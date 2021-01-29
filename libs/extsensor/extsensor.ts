@@ -103,7 +103,7 @@ namespace ovobotModules {
     const LINE_ADDRESS = 0x51
     const COLOR_ADDRESS = 0x40
     const lowBright = 8
-    const RGB_ADDRESS = 0x3C
+    const RGB_ADDRESS = 0x4C
     const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
     let tempDevEnable = [false,false,false,false]
     function sonicEnable() {
@@ -193,23 +193,24 @@ namespace ovobotModules {
     //% blockId=control_leds_output block="control %module neopixels %index color %color"
     //% weight=65
     export function controlNeopixels(module: ModuleIndex, index: LedIndex, color: Color) { 
-        let buf = pins.createBuffer(21);
-        let startPos;
-        buf[0] = 0;
-        buf[1] = 1;
         if (index == 0) {
-            for (let i = 2; i < 18; i += 3) {
+            let buf = pins.createBuffer(26);
+            buf[0] = 0;
+            buf[1] = 1;
+            for (let i = 2; i < 24; i += 3) {
                 buf[i] = ((selectColors[color] >> 8) & 0xff) / lowBright;
                 buf[i + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
                 buf[i + 2] = (selectColors[color] & 0xff) / lowBright;
             }
+            pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
         } else { 
-            startPos = 2 + 3 * (index-1);
-            buf[startPos] = ((selectColors[color] >> 8) & 0xff) / lowBright;
-            buf[startPos + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
-            buf[startPos + 2] = (selectColors[color] & 0xff) / lowBright;
+            let buf = pins.createBuffer(4);
+            buf[0] =  3 * (index-1) + 1;
+            buf[1] = ((selectColors[color] >> 8) & 0xff) / lowBright;
+            buf[2] = ((selectColors[color] >> 16) & 0xff) / lowBright;
+            buf[3] = (selectColors[color] & 0xff) / lowBright;
+            pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
         }
-        pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
     }
 
     export function controlNeopixelsWithBuffer(buffer:Buffer) {

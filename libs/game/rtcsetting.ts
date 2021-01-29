@@ -139,7 +139,14 @@ namespace scene.rtcSetting{
             
             this.timeymdstr = this.initTimeFromRtc();//"19700101000000MO";
             this.timehmsstr = "000000";
-            this.currentInputNum = parseInt(this.timeymdstr.substr(0,1));
+            if(this.timeymdstr == undefined) {
+                console.log("rtc error");
+                this.timeymdstr = "19700101000000MO";//"19700101000000MO";
+                this.currentInputNum = 1;
+            } else {
+                this.currentInputNum = parseInt(this.timeymdstr.substr(0,1));
+            }
+            // 
         }
 
     
@@ -205,7 +212,6 @@ namespace scene.rtcSetting{
 
         private draw() {
             this.drawPromptText("Set Time");
-            //this.drawNumpad();
             this.drawInputarea();
             this.drawSeparator();
             //this.drawEditDayofWeekArea();
@@ -267,17 +273,6 @@ namespace scene.rtcSetting{
             
             s.y = INPUT_TOP  + 2* (CELL_HEIGHT + PADDING_VERTICAL);;
             this.inputs.push(s);
-        }
-
-        private updateDaySelectCursor() {
-            if (this.cursorRow === 3) {
-                this.cursor.image.fill(0);
-                this.updateButtons();
-            }
-            else {
-                this.daycursor.x = ROW_LEFT + this.cursorColumn * CELLDAY_WIDTH;
-                this.daycursor.y = INPUT_TOP + CELLDAY_HEIGHT + PADDING_VERTICAL + 30;
-            }
         }
 
         private drawColons(){
@@ -343,39 +338,6 @@ namespace scene.rtcSetting{
             }
         }
 
-        private updateCursor() {
-            if (this.cursorRow === 4) {
-                this.cursor.image.fill(0);
-                this.updateButtons();
-            }
-            else {
-                this.cursor.x = ROW_LEFT + this.cursorColumn * CELL_WIDTH;
-                this.cursor.y = NUMPAD_TOP + this.cursorRow * CELL_HEIGHT;
-            }
-        }
-        private drawNumpad() {
-            const cursorImage = image.create(CELL_WIDTH, CELL_HEIGHT);
-            cursorImage.fill(this.theme.colorCursor);
-            this.cursor = sprites.create(cursorImage, -1);
-            this.cursor.z = -1;
-            this.updateCursor();
-
-            this.numbers = [];
-            for (let j = 0; j < NUM_LETTERS; j++) {
-                const letter = image.create(CELL_WIDTH, CELL_HEIGHT);
-
-                const col2 = j % NUMPAD_ROW_LENGTH;
-                const row2 = Math.floor(j / NUMPAD_ROW_LENGTH);
-
-                const t = sprites.create(letter, -1);
-                t.x = ROW_LEFT + col2 * CELL_WIDTH;
-                t.y = NUMPAD_TOP + row2 * CELL_HEIGHT;
-
-                this.numbers.push(t);
-            }
-            this.updateKeyboard();
-        }
-
         private drawBottomBar() {
             const bg = image.create(screen.width, BOTTOM_BAR_HEIGHT);
             bg.fill(this.theme.colorBottomBackground);
@@ -401,15 +363,6 @@ namespace scene.rtcSetting{
             }
 
             this.confirmButton.image.print(confirmText, BOTTOM_BAR_CONFIRM_X, BOTTOM_BAR_TEXT_Y);
-        }
-
-        private updateKeyboard() {
-            const len = this.numbers.length;
-            for (let k = 0; k < len; k++) {
-                const img = this.numbers[k].image;
-                img.fill(0);
-                img.print(getSymbolFromIndex(k), LETTER_OFFSET_X, LETTER_OFFSET_Y);
-            }
         }
 
         private replaceStr(str:string, index:number, char:string){
@@ -441,6 +394,7 @@ namespace scene.rtcSetting{
 
         private changeEditInput(right:boolean){
             //this.changeInputIndex(1);
+            this.blink = true;
             if(this.isEditing) return;
             if(right){
                 if (this.inputIndex >= this.answerLength+6) {
@@ -448,13 +402,14 @@ namespace scene.rtcSetting{
                     // this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
     
                     // this.frameCount = 0
-                    // this.blink = false;
+                    this.blink = false;
                     // this.updateSelectedInput();
                     
                     this.frameCount = 0;
-                    this.blink = false;
+                    
                     this.updateSelectedInput();
                     this.inputIndex = this.answerLength + 7;
+                    this.cursorRow = 3
                     this.updateButtons();
                     return;
                 }
@@ -463,22 +418,29 @@ namespace scene.rtcSetting{
                 this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
     
                 this.inputIndex += 1;
+                if(this.inputIndex < 8) {
+                    this.cursorRow = 0
+                } else if (this.inputIndex < 14) {
+                    this.cursorRow = 1
+                } else {
+                    this.cursorRow = 2
+                }
                 this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
 
                 this.frameCount = 0
-                this.blink = false;
                 //this.updateSelectedInput();
             } else {
                 if (this.inputIndex == 0){
+                    this.cursorRow = 0
                     return;
                 } else if (this.inputIndex == this.answerLength + 7){
                     this.inputIndex -= 1;
                     this.currentDay = this.timeymdstr.substr(-2);
         
                     this.frameCount = 0
-                    this.blink = false;
                     this.updateSelectedInput();
                     this.updateButtons();
+                    this.cursorRow = 2
                     return;
                 } else if (this.inputIndex == 14){
                     const u = this.inputs[this.inputIndex];
@@ -489,7 +451,7 @@ namespace scene.rtcSetting{
                     this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
     
                     this.frameCount = 0
-                    this.blink = false;
+                    this.cursorRow = 1
                     return;
                 }
                 const u = this.inputs[this.inputIndex];
@@ -500,7 +462,13 @@ namespace scene.rtcSetting{
                 this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
 
                 this.frameCount = 0
-                this.blink = false;
+                if(this.inputIndex < 8) {
+                    this.cursorRow = 0
+                } else if (this.inputIndex < 14) {
+                    this.cursorRow = 1
+                } else {
+                    this.cursorRow = 2
+                }
                // this.updateSelectedInput();
             }
 
@@ -528,7 +496,8 @@ namespace scene.rtcSetting{
             buf[5] = this.bin2bcd(date);   
             buf[6] = this.bin2bcd(month);  
             buf[7] = this.bin2bcd(year);      
-            pins.i2cWriteBuffer(0x68, buf);
+            let result = pins.i2cWriteBuffer(0x68, buf);
+            console.log("rtc write result:" + result);
         }
 
         private confirm() {
@@ -544,42 +513,114 @@ namespace scene.rtcSetting{
             scene.rtcSetting.closeSettingScene();
         }
 
+        private moveVertical(up: boolean) {
+            this.blink = true;
+            if (up) {
+                if (this.cursorRow === 3) {
+                    this.cursorRow -= 1;
+                    if (this.inputIndex == this.answerLength + 7){
+                        this.inputIndex = 14;
+                        this.currentDay = this.timeymdstr.substr(-2);
+            
+                        this.frameCount = 0
+                        this.updateSelectedInput();
+                        this.updateButtons();
+                        return;
+                    }
+
+                }
+                else {
+                    this.cursorRow = Math.max(0, this.cursorRow - 1);
+
+                    if (this.inputIndex == 14) {
+                        const u = this.inputs[this.inputIndex];
+                        const letter = this.timeymdstr.substr(-2);
+                        this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
+            
+                        this.inputIndex = 10
+                        this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
+        
+                        this.frameCount = 0
+                        return
+                    } else if (this.inputIndex < 14 && this.inputIndex > 7) {
+                        const u = this.inputs[this.inputIndex];
+                        const letter = this.timeymdstr.substr(this.inputIndex, 1);
+                        this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
+                        if(this.inputIndex == 8) {
+                            this.inputIndex = 0
+                        } else if(this.inputIndex == 9){
+                            this.inputIndex = 2
+                        } else {
+                            this.inputIndex -= 6
+                        } 
+                    }
+                    this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
+                    this.frameCount = 0
+                }
+            }
+            else {
+                this.cursorRow = Math.min(3, this.cursorRow + 1);
+                if(this.inputIndex == this.answerLength + 7) return;
+                const u = this.inputs[this.inputIndex];
+                const letter = this.timeymdstr.substr(this.inputIndex, 1);
+                this.drawInput(u.image, letter, this.theme.colorInputHighlighted,false);
+    
+                if(this.inputIndex < 2) {
+                    this.inputIndex = 8
+                } else if (this.inputIndex < 4) {
+                    this.inputIndex = 9
+                } else if (this.inputIndex < 8) {
+                    this.inputIndex = this.inputIndex + 6
+                } else if (this.inputIndex < 14) {
+                    this.inputIndex = 14
+                } else {
+                    this.blink = false;
+                    
+                    this.frameCount = 0;
+                    
+                    this.updateSelectedInput();
+                    this.inputIndex = this.answerLength + 7;
+                    this.updateButtons();
+                    return;
+                }
+                this.currentInputNum = parseInt(this.timeymdstr.substr(this.inputIndex,1));
+                this.frameCount = 0
+            }
+
+        }
 
         private registerHandlers() {
             controller._setUserEventsEnabled(false);
             controller.up.onEvent(SYSTEM_KEY_DOWN, () => {
-                //this.moveVertical(true);
+                this.moveVertical(true);
             })
 
             controller.down.onEvent(SYSTEM_KEY_DOWN, () => {
-                //this.moveVertical(false);
+                this.moveVertical(false);
             })
 
-            controller.right.onEvent(SYSTEM_KEY_UP, () => {
+            controller.right.onEvent(SYSTEM_KEY_DOWN, () => {
                 this.changeEditInput(true);
             });
 
-            controller.left.onEvent(SYSTEM_KEY_UP, () => {
+            controller.left.onEvent(SYSTEM_KEY_DOWN, () => {
                 this.changeEditInput(false);
             });
 
             controller.A.onEvent(SYSTEM_KEY_DOWN, () => {
-                if(this.inputIndex == this.answerLength + 6){
-                    //this.confirm();
-                } else {
-                    //this.changeNumber();
-                }
-                
-            });
-
-            controller.A.onEvent(SYSTEM_KEY_UP, () => {
                 if(this.inputIndex == this.answerLength + 7){
-                    this.confirm();
+                    //this.confirm();//call this scene again 
                 } else if(this.inputIndex == this.answerLength + 6){
                     this.changeDayofWeek();
                 } else {
                     this.changeNumber();
                 }
+            });
+
+            controller.A.onEvent(SYSTEM_KEY_UP, () => {
+                if(this.inputIndex == this.answerLength + 7){
+                    this.confirm();
+                } 
                 
             });
 
@@ -597,9 +638,8 @@ namespace scene.rtcSetting{
 
                 if (this.frameCount === 0) {
                     this.blink = !this.blink;
-
-                    this.updateSelectedInput();
                 }
+                this.updateSelectedInput();
             })
         }
 
@@ -620,7 +660,6 @@ namespace scene.rtcSetting{
                 }
             } else if (this.inputIndex == this.answerLength + 6){
                 const u = this.inputs[this.inputIndex];
-                //console.log('draw:' +  this.currentDay);
                 if (this.blink) {
                     this.drawInput(u.image, this.currentDay , this.theme.colorInput,true);
                 }
@@ -632,20 +671,6 @@ namespace scene.rtcSetting{
 
     }
 
-    function getSymbolFromIndex(index: number) {
-        if (index < 9) {
-            // Calculator Layout
-            return "" + (3 * Math.idiv(9 - index - 1, 3) + index % 3 + 1);
-        } else if (index == 9) {
-            return "";
-        } else if (index == 10) {
-            return "0";
-        } else if (index == 11) {
-            return "";
-        } else {
-            return "";
-        }
-    }
 
     function layoutText(message: string, width: number, height: number, color: number) {
         const lineHeight = font.charHeight + PROMPT_LINE_SPACING;
