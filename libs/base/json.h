@@ -44,6 +44,15 @@ namespace codalJson {
             }
         }
 
+        bool hasObjectItem(const char* name) {
+            cJSON_bool contain = cJSON_HasObjectItem(this->item, name);
+            if (contain == 0) {
+                return false;
+            } else {
+                return true;    
+            }
+        }
+
         int getArraySize() {
             return cJSON_GetArraySize(this->item);
         }

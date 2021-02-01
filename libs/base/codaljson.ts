@@ -13,6 +13,9 @@ namespace codalJson {
         //% shim=CodalJsonMethods::getBooleanValue
         getBooleanValue(name: string):boolean;
 
+        //% shim=CodalJsonMethods::hasObjectItem
+        hasObjectItem(name: string):boolean;
+
         //% shim=CodalJsonMethods::getItemArraySize
         getItemArraySize():number;
 
@@ -37,6 +40,13 @@ namespace codalJson {
         maincJobj:codalJsonObject
         constructor(cJobj:codalJsonObject) {
             this.maincJobj = cJobj;
+        }
+
+        //% group="Parse"
+        //% weight=61
+        //% blockId=jsonobj_hasName block="%JsonObject(myJsonObj) has key $name "
+        containObjectItem(name:string):boolean {
+            return this.maincJobj.hasObjectItem(name);
         }
 
         //% group="Parse"
@@ -67,7 +77,7 @@ namespace codalJson {
         getValueBoolean(name:string):boolean {
             return this.maincJobj.getBooleanValue(name);
         }
-
+ 
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_arrysize block="%JsonObject(myJsonObj) get array size "

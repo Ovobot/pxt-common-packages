@@ -39,6 +39,12 @@ bool getBooleanValue(codalJsonObject cJobj, String name)
 }
 
 //%
+bool hasObjectItem(codalJsonObject cJobj, String name)
+{
+    return cJobj->hasObjectItem((const char*)name->getUTF8Data());
+}
+
+//%
 void clearData(codalJsonObject cJobj)
 {
     cJobj->clear();
