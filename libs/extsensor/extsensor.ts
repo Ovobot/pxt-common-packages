@@ -89,40 +89,24 @@ enum Color {
     Black
 }
 
+enum Scale {
+    //% block= "Decimal"
+    Decimal,
+    //% block= "Hexadecimal"
+    Hexadecimal
+}
+
 //% color=#FF00FF weight=100 icon="\uf1ec" block="Ovobot Modules"
 namespace ovobotModules {
-    const SONAR_ADDRESS = 0x52
-    const MOTOR_ADDRESS = 0x64
+    const SONAR_ADDRESS_2 = 0x58
     const SERVO_ADDRESS = 0x74
-    const LED_ADDRESS = 0x53
     const SEG_ADDRESS = 0x6C
-    const TOUCHKEY_ADDRESS = 0x70
-    const TEMP_ADDRESS = 0x5c
+    const RGB_TOUCHKEY_ADDRESS = 0x4C
+
     const PM_ADDRESS = 0x60
     const SOIL_ADDRESS = 0x48
-    const LINE_ADDRESS = 0x51
-    const COLOR_ADDRESS = 0x40
     const lowBright = 8
-    const RGB_ADDRESS = 0x4C
     const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
-    let tempDevEnable = [false,false,false,false]
-    function sonicEnable() {
-        pins.i2cWriteRegister(SONAR_ADDRESS, 0x00, 0x01);
-    }
-
-    function constract(val: number, minVal: number, maxVal: number): number {
-        if (val > maxVal) {
-            return maxVal;
-        } else if (val < minVal) {
-            return minVal;
-        }
-        return val;
-    }
-
-    function tempEnable(address: number, index: number) { 
-        pins.i2cWriteRegister(address, 0x00, 0x01);
-        tempDevEnable[index] = true;
-    }
 
     function validate(str: String): Boolean { 
         let isfloat = false;
@@ -146,28 +130,26 @@ namespace ovobotModules {
      * TODO: 获取超声波传感器与前方障碍物的距离函数。
      */
     //% block weight=50
-    export function readDistance(): number {
-        sonicEnable();
+    export function readDistance(module: ModuleIndex): number {
+        let sonarVal;
 
-        let sonarVal = pins.i2cReadRegister(SONAR_ADDRESS, 0x01, NumberFormat.Int16LE);
-        let distance = sonarVal / 29;
+        pins.i2cWriteRegister(SONAR_ADDRESS_2 + module, 0x00, 0x01);
+        sonarVal = pins.i2cReadRegister(SONAR_ADDRESS_2 + module, 0x01, NumberFormat.Int16LE);
+
+        let distance = Math.round(sonarVal / 58);
 
         return distance;
     }
 
     /**
-     * TODO: 控制马达PWM输出。
+     * TODO: 读取声音响度。
      */
-    //% block="control motor %module  output %speed"
-    //% speed.min=-255 speed.max=255
+    //% blockId=read_loudness block="read %module loudness data"
     //% weight=65
-    export function controlMotorOutput(module: ModuleIndex, speed: number) {
-        let buf = pins.createBuffer(8);
-        buf[0] = 0x00;
-        buf[1] = speed > 0 ? 0 : 1;
-        buf[2] = Math.abs(speed)
-
-        pins.i2cWriteBuffer(MOTOR_ADDRESS + module, buf);
+    export function readLoudnessData(module: ModuleIndex): number{
+        pins.i2cWriteRegister(SONAR_ADDRESS_2 + module, 0x00, 0x01);
+        let data = pins.i2cReadRegister(SONAR_ADDRESS_2  + module , 0x03, NumberFormat.UInt8LE);
+        return (data);
     }
 
 
@@ -178,13 +160,8 @@ namespace ovobotModules {
     //% angle.min=-90 angle.max=90
     //% weight=65
     export function controlServoOutput(module: ModuleIndex,submod:SubIndex, angle: number) {
-        let buf = pins.createBuffer(8);
-        let newangle = constract(angle, -90, 90);
-        let output = 19 + 24 * angle / 180.0;
-        buf[0] = 0x00;
-        buf[1] = submod;
-        buf[2] = output;
-        pins.i2cWriteBuffer(SERVO_ADDRESS + module, buf);
+        let output = 18.5 + 25 * angle / 180.0;
+        pins.i2cWriteRegister(SERVO_ADDRESS + module, submod, output);
     }
 
     /**
@@ -202,14 +179,15 @@ namespace ovobotModules {
                 buf[i + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
                 buf[i + 2] = (selectColors[color] & 0xff) / lowBright;
             }
-            pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
+            pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
         } else { 
             let buf = pins.createBuffer(4);
             buf[0] =  3 * (index-1) + 1;
             buf[1] = ((selectColors[color] >> 8) & 0xff) / lowBright;
             buf[2] = ((selectColors[color] >> 16) & 0xff) / lowBright;
             buf[3] = (selectColors[color] & 0xff) / lowBright;
-            pins.i2cWriteBuffer(RGB_ADDRESS + module , buf);
+            pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
+            pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
         }
     }
 
@@ -218,15 +196,15 @@ namespace ovobotModules {
         buf[0] = 0;
         buf[1] = 1;       
         let sendbuf = Buffer.concat([buf,buffer]) 
-        pins.i2cWriteBuffer(RGB_ADDRESS , sendbuf);
+        pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS , sendbuf);
     }
 
     /**
      * TODO: 显示数码管数值。
      */
-    //% blockId=display_seg_number block="control seg %module display number %num"
+    //% blockId=display_seg_number block="control seg %module display number %num with %scale scale"
     //% weight=65
-    export function displaySegNumber(module: ModuleIndex, num: number) {
+    export function displaySegNumber(module: ModuleIndex, num: number, scale: Scale) {
         let buf = pins.createBuffer(6);
         buf[0] = 0;
         buf[1] = 1;
@@ -234,22 +212,34 @@ namespace ovobotModules {
         buf[3] = 0;
         buf[4] = 0;
         buf[5] = 0;
-        let str_num = num.toString();
-        let len = str_num.length;
-        let j = 0;
-        if (validate(str_num)) { 
-            for (let i = len - 1; i >= 0; i--) { 
-                if (str_num.charAt(i) == '.') {
-                    buf[5 - j] = (str_num.charCodeAt(i - 1) - '0'.charCodeAt(0)) | 0x80;
-                    i--;
-                } else if (str_num.charAt(i) == "-") {
-                    buf[5 - j] = 0x40;
-                } else { 
-                    buf[5 - j] = str_num.charCodeAt(i) - '0'.charCodeAt(0);
+        if (scale == Scale.Decimal) {
+            let str_num = num.toString();
+            let len = str_num.length;
+            let j = 0;
+            if (validate(str_num)) { 
+                for (let i = len - 1; i >= 0; i--) { 
+                    if (str_num.charAt(i) == '.') {
+                        buf[5 - j] = (str_num.charCodeAt(i - 1) - '0'.charCodeAt(0)) | 0x80;
+                        i--;
+                    } else if (str_num.charAt(i) == "-") {
+                        buf[5 - j] = 0x40;
+                    } else { 
+                        buf[5 - j] = str_num.charCodeAt(i) - '0'.charCodeAt(0);
+                    }
+                    j++;
                 }
-                j++;
+                pins.i2cWriteBuffer(SEG_ADDRESS + module, buf);
             }
-            pins.i2cWriteBuffer(SEG_ADDRESS, buf);
+        } else {
+            let hex_num = Math.round(num)
+            if (hex_num > 65535) {
+                hex_num = 65535
+            }
+            buf[2] = (hex_num >> 12) & 0x000F
+            buf[3] = (hex_num >> 8) & 0x000F
+            buf[4] = (hex_num >> 4) & 0x000F
+            buf[5] = (hex_num) & 0x000F
+            pins.i2cWriteBuffer(SEG_ADDRESS + module, buf);
         }
     }
     
@@ -258,9 +248,14 @@ namespace ovobotModules {
      */
     //% blockId=isTouchDown block="touchkey %module the %tpindex is touched?"
     //% weight=65
-    export function isTouchDown(module: ModuleIndex, tpindex: TPIndex): boolean{ 
-        pins.i2cWriteRegister(RGB_ADDRESS + module, 0x00, 0x01);
-        let data = pins.i2cReadRegister(RGB_ADDRESS + module, 0x13+tpindex, NumberFormat.UInt8LE);
+    export function isTouchDown(module: ModuleIndex, index: TPIndex): boolean{ 
+        pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
+        let data;
+        if (index == 0) {
+            data = pins.i2cReadRegister(RGB_TOUCHKEY_ADDRESS + module, 0x19, NumberFormat.UInt8LE);
+        } else {
+            data = pins.i2cReadRegister(RGB_TOUCHKEY_ADDRESS + module, 0x1A, NumberFormat.UInt8LE);
+        }
         return (data == 1);
     }
 
@@ -269,31 +264,22 @@ namespace ovobotModules {
      */
     //% blockId=read_temp_humidity block="read %module  %measure data"
     //% weight=65
-
     export function readTempOrHumidity(module: ModuleIndex, measure: MesureContent): number{
-        let buf = pins.createBuffer(6);
         let onboardTempValue = 400;
-        let extendTempValue;
         let humidityValue;
-        let address = TEMP_ADDRESS + module;
-        if (!tempDevEnable[module]) {
-            tempEnable(address, module);
-            return 9999;
-        } else { 
-            pins.i2cWriteRegister(address, 0x00, 0x01);
-            let res = pins.i2cReadBuffer(address, 6);//Buffer
-            onboardTempValue = -450 + 1750 * (res[0] << 8 | res[1]) / 65535;
-            humidityValue = 100 * (res[2] << 8 | res[3]) / 65535;
-            extendTempValue = (res[5] << 8 | res[4]) * 10 / 16.0;
-            if (measure == 0) {
-                return onboardTempValue * 0.1;
-            } else if (measure == 1) {
-                return humidityValue;
-            } else if (measure == 2) { 
-                return extendTempValue * 0.1;
-            }
-            return 9999;
-        }
+        pins.i2cWriteRegister(SEG_ADDRESS + module, 0x00, 0x01);
+        let data1 = pins.i2cReadRegister(SEG_ADDRESS + module, 0x05, NumberFormat.UInt8LE);
+        let data2 = pins.i2cReadRegister(SEG_ADDRESS + module, 0x06, NumberFormat.UInt8LE);
+        let data3 = pins.i2cReadRegister(SEG_ADDRESS + module, 0x07, NumberFormat.UInt8LE);
+        let data4 = pins.i2cReadRegister(SEG_ADDRESS + module, 0x08, NumberFormat.UInt8LE);
+        onboardTempValue = -450 + 1750 * (data1 << 8 | data2) / 65535;
+        humidityValue = 100 * (data3 << 8 | data4) / 65535;
+        if (measure == 0) {
+            return Math.round(onboardTempValue) * 0.1;
+        } else if (measure == 1) {
+            return Math.round(humidityValue);
+        } 
+        return 9999;
     }
 
     /**
@@ -301,11 +287,15 @@ namespace ovobotModules {
      */
     //% blockId=read_pm block="read %module pm data"
     //% weight=65
-
     export function readPmData(module: ModuleIndex): number{
         pins.i2cWriteRegister(PM_ADDRESS + module, 0x00, 0x01);
         let data = pins.i2cReadRegister(PM_ADDRESS  + module , 0x01, NumberFormat.UInt8LE);
-        return (255 - data);
+        let val = Math.round((255 - data) * 106 / 255) - 3;
+        if (val < 0)
+            val = 0;
+        else if (val > 100)
+            val = 100;
+        return val;
     }
 
     /**
@@ -313,56 +303,10 @@ namespace ovobotModules {
      */
     //% blockId=read_soil block="read %module soil data"
     //% weight=65
-    export function readSoilData(module: ModuleIndex): number{ 
+    export function readSoilHSensorData(module: ModuleIndex): number{ 
         pins.i2cWriteRegister(SOIL_ADDRESS + module, 0x00, 0x01);
         let data = pins.i2cReadRegister(SOIL_ADDRESS  + module , 0x01, NumberFormat.UInt8LE);
         return (data);
     }
-
-
-    function convertLineDataToU8(data:number):number {
-        let res = data;
-        if (data < 850) {
-            res = 850;
-        }
-        res = Math.round(255 - (res - 850) * 255 / (4095 -850));
-        return res;
-    }
-
-    /**
-     * TODO: 读取巡线值。
-     */
-    //% blockId=read_line block="read %module line data"
-    //% weight=65
-    export function readlineData(module: LineIndex): number{ 
-        pins.i2cWriteRegister(LINE_ADDRESS , 0x00, 0x01);
-        if (module == LineIndex.Left) {
-            let data = pins.i2cReadRegister(LINE_ADDRESS, 0x01, NumberFormat.UInt16LE);
-            return convertLineDataToU8(data);
-        } else if (module == LineIndex.Mid_Left) {
-            let data = pins.i2cReadRegister(LINE_ADDRESS, 0x03, NumberFormat.UInt16LE);
-            return convertLineDataToU8(data);
-        } else if (module == LineIndex.Mid_Right) {
-            let data = pins.i2cReadRegister(LINE_ADDRESS, 0x05, NumberFormat.UInt16LE);
-            return convertLineDataToU8(data);
-        }
-        let data = pins.i2cReadRegister(LINE_ADDRESS  , 0x07, NumberFormat.UInt16LE);
-        return convertLineDataToU8(data);
-    }
-
-    /**
-     * TODO: 读取颜色值。
-     */
-    //% blockId=read_color block="read %module color data"
-    //% weight=65
-    export function readColorData(module: ModuleIndex): number{ 
-        pins.i2cWriteRegister(COLOR_ADDRESS + module, 0x00, 0x01);
-        let redColorValue = pins.i2cReadRegister(COLOR_ADDRESS  + module , 0x01, NumberFormat.UInt8LE);
-        let greenColorValue = pins.i2cReadRegister(COLOR_ADDRESS  + module , 0x02, NumberFormat.UInt8LE);
-        let blueColorValue = pins.i2cReadRegister(COLOR_ADDRESS  + module , 0x03, NumberFormat.UInt8LE);
-        let col = (redColorValue << 16) | (greenColorValue << 8) | blueColorValue;
-        return (col);
-    }
-
 
 }
