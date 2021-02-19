@@ -1,4 +1,4 @@
-//% color=#6A31CA weight=70 icon="\uf0c1" blockGap=8
+//% color=#6A31CA weight=70 icon="\uf0c1" blockGap=8 block="IoT"
 //% blockGap=8
 namespace xtroniot {
     /**

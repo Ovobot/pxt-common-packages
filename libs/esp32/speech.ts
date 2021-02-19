@@ -2,7 +2,7 @@
 /**
  * Networking, Speech recognition
  */
-//% weight=90
+//% weight=78
 //% icon="\uf130" color="#7B68EE"
 //% groups='["Speech","Google Cloud", "Baidu Cloud"]'
 namespace speech {

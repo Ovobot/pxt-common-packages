@@ -1,6 +1,6 @@
 {
-    "name": "extsensor",
-    "description": "xtronpro ext sensors",
+    "name": "xtron-modules",
+    "description": "Xtron Extension Modules",
     "files": [
         "extsensor.ts",
         "defaultstrip.ts",
@@ -8,8 +8,6 @@
         "neopixel.ts",
         "transitions.ts",
         "animations.jres"
-    ],
-    "testFiles": [
     ],
     "public": true,
     "dependencies": {

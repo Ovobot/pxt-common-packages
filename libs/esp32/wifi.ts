@@ -2,7 +2,7 @@
 /**
  * WiFi
  */
-//% weight=95
+//% weight=79
 //% icon="\uf1eb" color="#BE4BDB"
 namespace wifi {
     //% blockId=wifi_setpassphrase block="Wi-Fi connect to account:%ssid password:%passphrase"

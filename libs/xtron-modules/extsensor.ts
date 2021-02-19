@@ -96,7 +96,7 @@ enum Scale {
     Hexadecimal
 }
 
-//% color=#FF00FF weight=100 icon="\uf1ec" block="Ovobot Modules"
+//% color=#FF00FF weight=100 icon="\uf1ec" block="Xtron Modules"
 namespace ovobotModules {
     const SONAR_ADDRESS_2 = 0x58
     const SERVO_ADDRESS = 0x74
