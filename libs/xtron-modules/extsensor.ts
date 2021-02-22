@@ -14,9 +14,9 @@ enum ModuleIndex {
 }
 
 enum TPIndex {
-    //% block="TP1"
+    //% block="◁"
     TP1,
-    //% block="TP2"  
+    //% block="◯"  
     TP2
 }
 
@@ -32,67 +32,35 @@ enum SubIndex {
 }
 
 enum MesureContent {
-    //% block="onboard temp"
+    //% block="temperature"
     TempOnBoard,
-    //% block="onboard humidity"
-    HmOnBoard,
-    //% block="extend temp"
-    TempOffBoard
+    //% block="humidity"
+    HmOnBoard
 }
 
 enum LedIndex {
-    //% block="all"
-    All,
-    //% block="1"
+    //% block="0"
     L1,
-    //% block="2"
+    //% block="1"
     L2,
-    //% block="3"
+    //% block="2"
     L3,
-    //% block="4"
+    //% block="3"
     L4,
-    //% block="5"
+    //% block="4"
     L5,
+    //% block="5"
+    L6,
     //% block="6"
-    L6
-}
-
-enum LineIndex {
-    //% block="left"
-    Left,
-    //% block="middle left"
-    Mid_Left,
-    //% block="middle right"
-    Mid_Right,
-    //% block="right"
-    Right 
-}
-
-enum Color {
-    //% block="red"
-    Red,
-    //% block="orange"
-    Orange,
-    //% block="yellow"
-    Yellow,
-    //% block="green"
-    Green,
-    //% block="blue"
-    Blue,
-    //% block="indigo"
-    Indigo,
-    //% block="purple"
-    Purple,
-    //% block="white"
-    White,
-    //% block="black"
-    Black
+    L7,
+    //% block="7"
+    L8
 }
 
 enum Scale {
-    //% block= "Decimal"
+    //% block="decimal"
     Decimal,
-    //% block= "Hexadecimal"
+    //% block="hexadecimal"
     Hexadecimal
 }
 
@@ -106,9 +74,8 @@ namespace ovobotModules {
     const PM_ADDRESS = 0x60
     const SOIL_ADDRESS = 0x48
     const lowBright = 8
-    const selectColors = [0xff0000, 0xffa500, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x800080, 0xffffff, 0x000000]
 
-    function validate(str: String): Boolean { 
+    function validate(str: String): boolean { 
         let isfloat = false;
         let len = str.length;
         if (len > 5) { 
@@ -129,7 +96,8 @@ namespace ovobotModules {
     /**
      * TODO: 获取超声波传感器与前方障碍物的距离函数。
      */
-    //% block weight=50
+    //% blockId=read_distance block="ultrasonic %module distance"
+    //% weight=50
     export function readDistance(module: ModuleIndex): number {
         let sonarVal;
 
@@ -144,7 +112,7 @@ namespace ovobotModules {
     /**
      * TODO: 读取声音响度。
      */
-    //% blockId=read_loudness block="read %module loudness data"
+    //% blockId=read_loudness block="ultrasonic %module loudness"
     //% weight=65
     export function readLoudnessData(module: ModuleIndex): number{
         pins.i2cWriteRegister(SONAR_ADDRESS_2 + module, 0x00, 0x01);
@@ -156,7 +124,7 @@ namespace ovobotModules {
     /**
      * TODO: 控制舵机旋转。
      */
-    //% block="control servo %module index %submod  rotate to %angle"
+    //% block="set servo controller %module port %submod to %angle"
     //% angle.min=-90 angle.max=90
     //% weight=65
     export function controlServoOutput(module: ModuleIndex,submod:SubIndex, angle: number) {
@@ -167,28 +135,36 @@ namespace ovobotModules {
     /**
      * TODO: 控制RGB灯条。
      */
-    //% blockId=control_leds_output block="control %module neopixels %index color %color"
+    //% blockId=control_leds_output block="set touch & led %module all pixels to %rgb=colorNumberPicker"
     //% weight=65
-    export function controlNeopixels(module: ModuleIndex, index: LedIndex, color: Color) { 
-        if (index == 0) {
-            let buf = pins.createBuffer(26);
-            buf[0] = 0;
-            buf[1] = 1;
-            for (let i = 2; i < 24; i += 3) {
-                buf[i] = ((selectColors[color] >> 8) & 0xff) / lowBright;
-                buf[i + 1] = ((selectColors[color] >> 16) & 0xff) / lowBright;
-                buf[i + 2] = (selectColors[color] & 0xff) / lowBright;
-            }
-            pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
-        } else { 
-            let buf = pins.createBuffer(4);
-            buf[0] =  3 * (index-1) + 1;
-            buf[1] = ((selectColors[color] >> 8) & 0xff) / lowBright;
-            buf[2] = ((selectColors[color] >> 16) & 0xff) / lowBright;
-            buf[3] = (selectColors[color] & 0xff) / lowBright;
-            pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
-            pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
+    export function controlAllNeopixels(module: ModuleIndex, rgb: number) { 
+        let buf = pins.createBuffer(26);
+        buf[0] = 0;
+        buf[1] = 1;
+        for (let i = 2; i < 24; i += 3) {
+            buf[i] = ((rgb >> 8) & 0xff) / lowBright;
+            buf[i + 1] = ((rgb >> 16) & 0xff) / lowBright;
+            buf[i + 2] = (rgb & 0xff) / lowBright;
         }
+        pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
+
+    }
+
+    /**
+     * TODO: 控制RGB灯条。
+     */
+    //% blockId=control_led_output block="set touch & led %module pixel color at %index to %rgb=colorNumberPicker"
+    //% weight=65
+    export function controlNeopixels(module: ModuleIndex, index: LedIndex, rgb: number) { 
+        
+        let buf = pins.createBuffer(4);
+        buf[0] =  3 * index + 1;
+        buf[1] = ((rgb >> 8) & 0xff) / lowBright;
+        buf[2] = ((rgb >> 16) & 0xff) / lowBright;
+        buf[3] = (rgb & 0xff) / lowBright;
+        pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
+        pins.i2cWriteBuffer(RGB_TOUCHKEY_ADDRESS + module , buf);
+        
     }
 
     export function controlNeopixelsWithBuffer(buffer:Buffer) {
@@ -202,7 +178,7 @@ namespace ovobotModules {
     /**
      * TODO: 显示数码管数值。
      */
-    //% blockId=display_seg_number block="control seg %module display number %num with %scale scale"
+    //% blockId=display_seg_number block="set 7 segment display %module to %num in %scale"
     //% weight=65
     export function displaySegNumber(module: ModuleIndex, num: number, scale: Scale) {
         let buf = pins.createBuffer(6);
@@ -246,7 +222,7 @@ namespace ovobotModules {
     /**
      * TODO: 触摸按键是否接触。
      */
-    //% blockId=isTouchDown block="touchkey %module the %tpindex is touched?"
+    //% blockId=isTouchDown block="is touch & led %module the %tpindex button touched?"
     //% weight=65
     export function isTouchDown(module: ModuleIndex, index: TPIndex): boolean{ 
         pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
@@ -262,7 +238,7 @@ namespace ovobotModules {
     /**
      * TODO: 读取温湿度。
      */
-    //% blockId=read_temp_humidity block="read %module  %measure data"
+    //% blockId=read_temp_humidity block="7 segment display %module  %measure"
     //% weight=65
     export function readTempOrHumidity(module: ModuleIndex, measure: MesureContent): number{
         let onboardTempValue = 400;
@@ -285,7 +261,7 @@ namespace ovobotModules {
     /**
      * TODO: 读取电位器。
      */
-    //% blockId=read_pm block="read %module pm data"
+    //% blockId=read_pm block="potentiometer %module"
     //% weight=65
     export function readPmData(module: ModuleIndex): number{
         pins.i2cWriteRegister(PM_ADDRESS + module, 0x00, 0x01);
@@ -301,7 +277,7 @@ namespace ovobotModules {
     /**
      * TODO: 读取土壤湿度。
      */
-    //% blockId=read_soil block="read %module soil data"
+    //% blockId=read_soil block="soil moisture %module"
     //% weight=65
     export function readSoilHSensorData(module: ModuleIndex): number{ 
         pins.i2cWriteRegister(SOIL_ADDRESS + module, 0x00, 0x01);
