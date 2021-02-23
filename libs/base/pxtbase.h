@@ -365,7 +365,7 @@ bool eq_bool(TValue a, TValue b);
 bool eqq_bool(TValue a, TValue b);
 
 //%
-void failedCast(TValue v);
+void failedCast(TValue v, void *addr = NULL);
 //%
 void missingProperty(TValue v);
 
@@ -995,6 +995,7 @@ void *gcAllocate(int numbytes);
 void *gcAllocateArray(int numbytes);
 extern "C" void *app_alloc(int numbytes);
 extern "C" void *app_free(void *ptr);
+extern "C" void *app_alloc_at(void *at, int numbytes);
 void gcPreAllocateBlock(uint32_t sz);
 
 #ifdef PXT64

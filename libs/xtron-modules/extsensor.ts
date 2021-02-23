@@ -14,9 +14,9 @@ enum ModuleIndex {
 }
 
 enum TPIndex {
-    //% block="◁"
+    //% block="◯"
     TP1,
-    //% block="◯"  
+    //% block="◁"  
     TP2
 }
 

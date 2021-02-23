@@ -43,7 +43,9 @@
         "particleeffects.ts",
         "effects.ts",
         "texteffects.ts",
-        "rtcsetting.ts"
+        "rtcsetting.ts",
+        "assetTemplates.ts",
+        "animation.ts"
     ],
     "public": true,
     "dependencies": {
