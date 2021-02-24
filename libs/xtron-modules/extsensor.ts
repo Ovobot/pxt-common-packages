@@ -14,10 +14,10 @@ enum ModuleIndex {
 }
 
 enum TPIndex {
-    //% block="◯"
-    TP1,
-    //% block="◁"  
-    TP2
+    //% block="◁"
+    Triangle,
+    //% block="◯"  
+    Circle
 }
 
 enum SubIndex { 
@@ -33,9 +33,9 @@ enum SubIndex {
 
 enum MesureContent {
     //% block="temperature"
-    TempOnBoard,
+    Temperature,
     //% block="humidity"
-    HmOnBoard
+    Humidity
 }
 
 enum LedIndex {
@@ -65,7 +65,7 @@ enum Scale {
 }
 
 //% color=#FF00FF weight=100 icon="\uf1ec" block="Xtron Modules"
-namespace ovobotModules {
+namespace xtronModules {
     const SONAR_ADDRESS_2 = 0x58
     const SERVO_ADDRESS = 0x74
     const SEG_ADDRESS = 0x6C
@@ -179,7 +179,7 @@ namespace ovobotModules {
      * TODO: 显示数码管数值。
      */
     //% blockId=display_seg_number block="set 7 segment display %module to %num in %scale"
-    //% weight=65
+    //% weight=66
     export function displaySegNumber(module: ModuleIndex, num: number, scale: Scale) {
         let buf = pins.createBuffer(6);
         buf[0] = 0;
@@ -222,15 +222,15 @@ namespace ovobotModules {
     /**
      * TODO: 触摸按键是否接触。
      */
-    //% blockId=isTouchDown block="is touch & led %module the %tpindex button touched?"
+    //% blockId=isTouchDown block="is touch & led %module the %index button touched?"
     //% weight=65
     export function isTouchDown(module: ModuleIndex, index: TPIndex): boolean{ 
         pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);
         let data;
         if (index == 0) {
-            data = pins.i2cReadRegister(RGB_TOUCHKEY_ADDRESS + module, 0x19, NumberFormat.UInt8LE);
-        } else {
             data = pins.i2cReadRegister(RGB_TOUCHKEY_ADDRESS + module, 0x1A, NumberFormat.UInt8LE);
+        } else {
+            data = pins.i2cReadRegister(RGB_TOUCHKEY_ADDRESS + module, 0x19, NumberFormat.UInt8LE);
         }
         return (data == 1);
     }
@@ -239,7 +239,7 @@ namespace ovobotModules {
      * TODO: 读取温湿度。
      */
     //% blockId=read_temp_humidity block="7 segment display %module  %measure"
-    //% weight=65
+    //% weight=67
     export function readTempOrHumidity(module: ModuleIndex, measure: MesureContent): number{
         let onboardTempValue = 400;
         let humidityValue;
@@ -262,7 +262,7 @@ namespace ovobotModules {
      * TODO: 读取电位器。
      */
     //% blockId=read_pm block="potentiometer %module"
-    //% weight=65
+    //% weight=68
     export function readPmData(module: ModuleIndex): number{
         pins.i2cWriteRegister(PM_ADDRESS + module, 0x00, 0x01);
         let data = pins.i2cReadRegister(PM_ADDRESS  + module , 0x01, NumberFormat.UInt8LE);
@@ -278,7 +278,7 @@ namespace ovobotModules {
      * TODO: 读取土壤湿度。
      */
     //% blockId=read_soil block="soil moisture %module"
-    //% weight=65
+    //% weight=69
     export function readSoilHSensorData(module: ModuleIndex): number{ 
         pins.i2cWriteRegister(SOIL_ADDRESS + module, 0x00, 0x01);
         let data = pins.i2cReadRegister(SOIL_ADDRESS  + module , 0x01, NumberFormat.UInt8LE);

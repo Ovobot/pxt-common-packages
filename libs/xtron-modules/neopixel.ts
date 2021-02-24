@@ -344,7 +344,7 @@ namespace lightext {
                 if (this._brightness == 0xff && !this._brightnessBuf && !this._photonPenColor) {
                     // no need to process buffer
                     //light.sendBuffer(this._dataPin, this._clkPin, this._mode, b);
-                    ovobotModules.controlNeopixelsWithBuffer(b);
+                    xtronModules.controlNeopixelsWithBuffer(b);
                     return;
                 }
 
@@ -367,7 +367,7 @@ namespace lightext {
                 this.drawPhoton(sb, stride);
                 //console.log(`${!!this._dataPin} ${!!this._clkPin} ${this.mode} hex${sb.toHex()}`)
                 //light.sendBuffer(this._dataPin, this._clkPin, this._mode, sb);
-                ovobotModules.controlNeopixelsWithBuffer(sb);
+                xtronModules.controlNeopixelsWithBuffer(sb);
             }
         }
 
