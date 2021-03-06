@@ -1,4 +1,55 @@
+enum LangTypes {
+    //% block="English"
+    EN,
+    //% block="Chinese"
+    ZH
+}
 
+enum GSRLangTypes {
+    //% block="English"
+    EN,
+    //% block="Chinese"
+    ZH,
+    //% block="French"
+    FR,
+    //% block="Russian"
+    RU,
+    //% block="German"
+    DE,
+    //% block="Portuguese"
+    PT,
+    //% block="Italian"
+    IT,
+    //% block="Japanese"
+    JA            
+}
+
+enum WakeupWord {
+    //% block="hi jeson"
+    Jeson,
+    //% block="tian mao jing ling"
+    Tianmao,
+    //% block="xiao ai tong xue"
+    Xiaoai,
+    //% block="xiao le xiao le"
+    Xiaole,
+    //% block="ao wa ji qi ren"
+    Ovobot
+}
+
+enum SrCloud {
+    //% block="Google"
+    Google,
+    //% block="Baidu"
+    Baidu
+}
+
+enum VoiceTag {
+    //% block="Female"
+    Female,
+    //% block="Male"
+    Male
+}
 /**
  * Networking, Speech recognition
  */
@@ -7,59 +58,6 @@
 //% groups='["Speech","Google Cloud", "Baidu Cloud"]'
 namespace speech {
     export const CODAL_SERIAL_WAKEUP_RECEIVED = 5
-
-    export enum LangTypes {
-        //% block="English"
-        EN,
-        //% block="Chinese"
-        ZH
-    }
-
-    export enum GSRLangTypes {
-        //% block="English"
-        EN,
-        //% block="Chinese"
-        ZH,
-        //% block="French"
-        FR,
-        //% block="Russian"
-        RU,
-        //% block="German"
-        DE,
-        //% block="Portuguese"
-        PT,
-        //% block="Italian"
-        IT,
-        //% block="Japanese"
-        JA            
-    }
-
-    export enum WAKEUPWORD {
-        //% block="hi jeson"
-        JESON,
-        //% block="tian mao jing ling"
-        TIANMAO,
-        //% block="xiao ai tong xue"
-        XIAOAI,
-        //% block="xiao le xiao le"
-        XIAOLE,
-        //% block="ao wa ji qi ren"
-        OVOBOT
-    }
-
-    export enum SRCLOUD {
-        //% block="Google"
-        Google,
-        //% block="Baidu"
-        Baidu
-    }
-
-    export enum VOICEPERSON {
-        //% block="FEMALESTD"
-        FEMALESTD,
-        //% block="MALESTD"
-        MALESTD
-    }
 
     let wkmode:boolean = false;
 
@@ -77,7 +75,8 @@ namespace speech {
     //% group="Speech"
     //% blockId=speech_set_srcloud block="set speech recognition cloud %cloud"
     //% weight=100 blockGap=12
-    export function setSRcloud(cloud:SRCLOUD) {
+    //% help=speech/speech-cloud    
+    export function setSrCloud(cloud:SrCloud) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.setSRCloud(cloud);
@@ -90,6 +89,7 @@ namespace speech {
     //% group="Speech"
     //% blockId=speech_start_voiceInput block="start voice input"
     //% weight=99 blockGap=12
+    //% help=speech/speech-voice-input    
     export function startVoiceInput() {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -100,7 +100,8 @@ namespace speech {
     //% group="Speech"
     //% blockId=speech_rec_result block="get speech recognition result"
     //% weight=98 blockGap=12
-    export function speechRecognitionResult(): void {
+    //% help=speech/speech-recognition-result    
+    export function getSrResult(): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.getSpeechRecResult();
@@ -112,9 +113,10 @@ namespace speech {
      * @param handler speech recognition result callback;
     */
     //% group="Speech"
-    //% blockId=on_sr_result block="on speech recognition callback"
+    //% blockId=on_sr_result block="on speech recognition receive"
     //% weight=82 draggableParameters=reporter
-    export function onSpeechRecognitionResult(handler: (result: string) => void): void {
+    //% help=speech/speech-on-recognition-result    
+    export function onSpeechRecognitionReceive(handler: (result: string) => void): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.registerSRResponse(handler);
@@ -122,9 +124,10 @@ namespace speech {
     }
 
     //% group="Speech"
-    //% blockId=speech_esp32_voicesay block="voice say %content"
+    //% blockId=speech_esp32_voicesay block="speak %content"
     //% weight=90 blockGap=12
-    export function voiceSay(content:string) {
+    //% help=speech/speech-voice-output    
+    export function speak(content:string) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             return c.setVoiceContent(content);
@@ -132,18 +135,20 @@ namespace speech {
     }
 
     //% group="Speech"  
-    //% blockId=speech_esp32_voiceperson block="set voice person %person"
+    //% blockId=speech_esp32_voiceperson block="set voice tag %person"
     //% weight=91 blockGap=12
-    export function voicePerson(person:VOICEPERSON) {
+    //% help=speech/speech-voice-tag       
+    export function setVoiceTag(tag:VoiceTag) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            return c.setVoicePerson(person);
+            return c.setVoicePerson(tag);
         }        
     }  
 
     //% group="Baidu Cloud"
     //% blockId=speech_set_baidu_lang block="set baidu speech language %lang"
     //% weight=90 blockGap=12
+    //% help=speech/speech-sr-language-baiduservice    
     export function setSRLanguageInBaidu(lang:LangTypes) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -164,6 +169,7 @@ namespace speech {
     //% group="Google Cloud"
     //% blockId=speech_set_google_lang block="set google speech language %lang"
     //% weight=90 blockGap=12
+    //% help=speech/speech-sr-language-googleservice    
     export function setSRLanguageInGoogle(lang:GSRLangTypes) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -202,7 +208,8 @@ namespace speech {
     //% group="Speech"
     //% blockId=speech_set_wakeupword block="set speech wake up word %wkWord"
     //% weight=88 blockGap=12
-    export function speechSelectWakeupWord(wkWord:WAKEUPWORD) {
+    //% help=speech/speech-set-wakeupword     
+    export function setWakeupWord(wkWord:WakeupWord) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.setSpeechWkWord(wkWord);
@@ -213,6 +220,7 @@ namespace speech {
     //% group="Speech"
     //% blockId=speech_wakeup block="robot wake up?"
     //% weight=65 blockGap=12
+    //% help=speech/speech-receive-wakeup-notice    
     export function receiveWKNotice(handler: () => void) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {

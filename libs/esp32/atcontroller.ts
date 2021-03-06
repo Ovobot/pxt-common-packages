@@ -603,17 +603,15 @@ namespace esp32 {
                             ansLen =  this.ser.readString();//this.ser.readUntil(Delimiters.Colon);
                             if(ansLen.length){
                                 let netRequestResult = ""; 
-                                // let ansnumLen:number = parseFloat(ansLen);
-                                //console.log("num len:" + ansLen);
-                                console.log("num len:" + ansLen.length);
+                                // console.log("num len:" + ansLen.length);
 
                                 packetNum = packetNum.concat(ansLen);
                                 let indexC = packetNum.indexOf(":");
-                                console.log("colon index:" + indexC);
+                                // console.log("colon index:" + indexC);
 
                                 if(indexC != -1) {
                                     let packlen = parseFloat(packetNum.slice(0,indexC));
-                                    console.log("get len:" + packlen);
+                                    // console.log("get len:" + packlen);
                                     if(packetNum.length > indexC+1) {
                                         //start slice response
                                         netRequestResult = packetNum.slice(indexC+1);
@@ -621,7 +619,7 @@ namespace esp32 {
                                             ansLen =  this.ser.readString();
                                             if(ansLen.length) {
                                                 netRequestResult = netRequestResult.concat(ansLen);
-                                                console.log("now len:" + this.byteLength(netRequestResult));
+                                                // console.log("now len:" + this.byteLength(netRequestResult));
                                             }
                                             pause(1);
                                         }
@@ -630,7 +628,7 @@ namespace esp32 {
                                             let packet =  this.ser.readString();
                                             if(packet) {
                                                 netRequestResult = netRequestResult.concat(packet);
-                                                console.log("now len:" + this.byteLength(netRequestResult));
+                                                // console.log("now len:" + this.byteLength(netRequestResult));
                                             }
                                             pause(1);
                                         }
@@ -647,7 +645,6 @@ namespace esp32 {
                             pause(10);
                         }
                         this.waitingHttpResult = false;
-                        console.log("http over");    
                     });
                 }
             });

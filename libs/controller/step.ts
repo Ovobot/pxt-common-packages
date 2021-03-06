@@ -138,7 +138,8 @@ namespace controller{
 
     //% blockId=getuserstep block="user steps"
     //% group="Extras"
-    export function getUserStep():number {
+    //% help=pedometer/get-user-steps  
+    export function getUserSteps():number {
         if(!pedometerInit) {
             pedometerInit = true;
             startPedometer()

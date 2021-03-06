@@ -1,6 +1,6 @@
 {
     "name": "rtc",
-    "description": "An rtc library for xtronpro",
+    "description": "An rtc library for Xtron Pro",
     "files": [
         "rtc.ts",
         "rtc.cpp",

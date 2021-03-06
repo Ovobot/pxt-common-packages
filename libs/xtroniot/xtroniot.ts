@@ -2,12 +2,13 @@
 //% blockGap=8
 namespace xtroniot {
     /**
-     * Set MQTT set host
+     * connect MQTT server
      * @param clientid Mqtt client id
     */
     //% blockId=mqtt_sethost block="connect server with clientID%clientid"
     //% weight=90
-    export function mqttSetHost(clientid: string): void {
+    //% help=xtroniot/mqtt-connect    
+    export function mqttConnect(clientid: string): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             return c.setHost(clientid);
@@ -27,6 +28,7 @@ namespace xtroniot {
     //% name.shadow=text
     //% value.shadow=math_number
     //% inlineInputMode=inline
+    //% help=xtroniot/mqtt-publish    
     export function mqttPublish(consoleName: string,chartName:string, name: string, value: number): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -37,6 +39,7 @@ namespace xtroniot {
 
     //% blockId=mqtt_subscribe_console block="subscribe console  %name"
     //% weight=84
+    //% help=xtroniot/mqtt-subscribe    
     export function mqttSubscribeConsoleName(name: string): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -51,7 +54,8 @@ namespace xtroniot {
     //% blockId=on_mqtt_topic_message block="on receive "
     //% weight=81
     //% blockGap=50 draggableParameters=reporter
-    export function onMqttTopicMessage(handler: (consoleName: string, message: string) => void): void {
+    //% help=xtroniot/mqtt-receive-message    
+    export function onMqttReceive(handler: (consoleName: string, message: string) => void): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.registerMqttSubResponse(handler);

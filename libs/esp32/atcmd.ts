@@ -10,8 +10,9 @@ namespace AT{
      * Send at command.
      * @param command the command string
      */
-    //% blockId=at_send block="send AT command  %command"
+    //% blockId=at_send block="send AT command %command"
     //% weight=85 blockGap=12
+    //% help=at/send-command   
     export function sendCommand(command:string) {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
@@ -19,10 +20,11 @@ namespace AT{
         }
     }
 
-    //% blockId=at_result block="AT command result"
+    //% blockId=at_result block="on AT command return"
     //% weight=60 blockGap=12
     //% draggableParameters=reporter
-    export function onATResult(handler: (atResult: string[]) => void): void {
+    //% help=at/on-at-command-return   
+    export function onATReturn(handler: (atResult: string[]) => void): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             c.registerATResponse(handler);

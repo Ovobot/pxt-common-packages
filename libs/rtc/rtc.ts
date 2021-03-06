@@ -110,7 +110,8 @@ namespace rtcModules {
     //% group="Time"
     //% block weight=50
     //% blockId=rtc_read_format_time block="time in %fmt   "
-    export function readTimeStringFormateFrom(fmt:TimeFormat = TimeFormat.BASICFORMAT) : string {
+    //% help=rtc/read-format-time
+    export function readTimeInFormat(fmt:TimeFormat = TimeFormat.BASICFORMAT) : string {
         const weekCN = '一二三四五六日';
 
         const weekEN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -242,7 +243,8 @@ namespace rtcModules {
     //% group="Time" 
     //% weight=50
     //% blockId=rtc_read block="time %type"
-    export function readRTCTime(type:TimeType = TimeType.SECONDS) : number{
+    //% help=rtc/read-time
+    export function readTime(type:TimeType = TimeType.SECONDS) : number{
         switch (type) {
             case TimeType.SECONDS:
                 return readSeconds();

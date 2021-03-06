@@ -11,6 +11,7 @@ namespace JsonParser{
     //% blockId=jsonparser_create block="Json string %jsonstr"
     //% blockSetVariable=myJsonObj
     //% weight=100 
+    //% help=json/create         
     export function create(jsonstr: string): codalJson.JsonObject {
         const jsonObj = codalJson.parse(jsonstr)
         return jsonObj

@@ -5,18 +5,20 @@
 //% weight=79
 //% icon="\uf1eb" color="#BE4BDB"
 namespace wifi {
-    //% blockId=wifi_setpassphrase block="Wi-Fi connect to account:%ssid password:%passphrase"
+    //% blockId=wifi_connect block="connect to Wi-Fi name:%name password:%password"
     //% weight=92 blockGap=12
-    export function setPassphrase(ssid: string, passphrase: string): void {
+    //% help=wifi/wifi-connect
+    export function connect(name: string, password: string): void {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
-            c.wifiConnect(ssid,passphrase);
+            c.wifiConnect(name,password);
         }
     }
 
-    //% blockId=wifi_connected block="Wi-Fi connected?"
+    //% blockId=wifi_isConnected block="is Wi-Fi connected?"
     //% weight=90 blockGap=12
-    export function connected(): boolean {
+    //% help=wifi/wifi-isconnected
+    export function isConnected(): boolean {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
             return c.isConnected;
@@ -26,11 +28,11 @@ namespace wifi {
 
     /**
      * get wifi info
-     * @param ssid wifi ssid; eg: @PHICOMM_B8
     */
-    //% blockId=wifi_set_getrssi block="get rssi strength"
+    //% blockId=wifi_set_getrssi block="get Wi-Fi rssi"
     //% weight=70 blockGap=12
-    export function getRssiStrength(): number {
+    //% help=wifi/wifi-strength
+    export function getRssi(): number {
         let c =  esp32.defaultController() as esp32.ATController;
         if (c) {
            return c.getRssi();

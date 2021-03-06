@@ -44,14 +44,16 @@ namespace codalJson {
 
         //% group="Parse"
         //% weight=61
-        //% blockId=jsonobj_hasName block="%JsonObject(myJsonObj) has key $name "
-        containObjectItem(name:string):boolean {
+        //% blockId=jsonobj_hasName block="%JsonObject(myJsonObj) contains key $name "
+        //% help=json/contains-key    
+        containsKey(name:string):boolean {
             return this.maincJobj.hasObjectItem(name);
         }
 
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_toobj block="%JsonObject(myJsonObj) get object of key $name "
+        //% help=json/get-object            
         getObject(name:string):JsonObject {
             let newobj = new JsonObject(this.maincJobj.getObjectItem(name));
             return newobj;
@@ -60,6 +62,7 @@ namespace codalJson {
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_tostring block="%JsonObject(myJsonObj) get string of key $name "
+        //% help=json/get-string                    
         getValueString(name:string):string {
             return this.maincJobj.getValueString(name);
         }
@@ -67,6 +70,7 @@ namespace codalJson {
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_tonumber block="%JsonObject(myJsonObj) get number of key $name "
+        //% help=json/get-number         
         getValueNumber(name:string):number {
             return this.maincJobj.getValueNumber(name);
         }
@@ -74,6 +78,7 @@ namespace codalJson {
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_tobool block="%JsonObject(myJsonObj) get bool of key $name "
+        //% help=json/get-boolean         
         getValueBoolean(name:string):boolean {
             return this.maincJobj.getBooleanValue(name);
         }
@@ -81,13 +86,15 @@ namespace codalJson {
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_arrysize block="%JsonObject(myJsonObj) get array size "
-        getItemArraySize():number {
+        //% help=json/get-arraysize         
+        getArraySize():number {
             return this.maincJobj.getItemArraySize();
         }
 
         //% group="Parse"
         //% weight=60
         //% blockId=jsonobj_arrayitem block="%JsonObject(myJsonObj) get array item at index $index"
+        //% help=json/get-array-item         
         getArrayItem(index:number):JsonObject {
             let newobj = new JsonObject(this.maincJobj.getArrayItem(index));
             return newobj;
@@ -95,6 +102,7 @@ namespace codalJson {
 
         //% group="Lifecycle"
         //% blockId=jsonobj_destroy block="destroy %JsonObject(myJsonObj)"
+        //% help=json/destroy         
         destroy() {
             this.maincJobj.clear()
             this.maincJobj = undefined
