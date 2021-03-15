@@ -76,6 +76,16 @@ namespace control {
     //% shim=pxt::dumpPerfCounters
     export function dmesgPerfCounters() { }
 
+    export function isUSBOnline() {
+        const cs = pins.pinByCfg(DAL.CFG_PIN_USB_POWER)
+        if(cs) {
+            return cs.digitalRead()
+        } else {
+            return isUSBInitialized()
+        }
+         
+    }
+
     /**
      * Display an error code and stop the program when the assertion is `false`.
      */

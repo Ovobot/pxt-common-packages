@@ -175,15 +175,25 @@ namespace scene {
                 power.checkDeepSleep();
                 power.checkScreenSleep();
                 if(power.isInScreenSleep()) {
-                    game.waitAnyButton();
-                    const brightness = settings.readNumber("#brightness");
-                    if (brightness !== undefined)
-                        screen.setBrightness(brightness)
-                    else     
-                        screen.setBrightness(100);
+                    controller._setUserEventsEnabled(false);
+                    while(1) {
+                        power.checkDeepSleep();
+                        if(controller.anyButton.isPressed()) {
+                            const brightness = settings.readNumber("#brightness");
+                            if (brightness !== undefined)
+                                screen.setBrightness(brightness)
+                            else     
+                                screen.setBrightness(100);
+        
+                            screen.setSleep(false);
+                            power.poke();
+                            controller._setUserEventsEnabled(true);
+                            break;
+                        }
+                        pause(20)
+                    }
+                    // game.waitAnyButton();
 
-                    screen.setSleep(false);
-                    power.poke();
                 }
             });
             // update screen

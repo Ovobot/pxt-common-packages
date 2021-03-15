@@ -47,9 +47,12 @@ namespace power {
         const to = _timeout || 0;
         if (to > 0 && 
             control.millis() - p > to &&
-            !control.isUSBInitialized()) {
+            !control.isUSBOnline()) {
             // going to deep sleep
             deepSleep();
+        }
+        if(control.isUSBOnline()) {
+            _poked = control.millis();
         }
     }
 
@@ -57,14 +60,17 @@ namespace power {
         init();
         const p = _poked || 0;
         const to = _screenout || 0;
+
         if (to > 0 && 
             control.millis() - p > to &&
-            !control.isUSBInitialized()) {
+            !control.isUSBOnline()) {
             screen.setBrightnessZero();
             screen.setSleep(true);
             _screenSleep = true;
         }
-
+        if(control.isUSBOnline()) {
+            _poked = control.millis();
+        }
     }
 
     export function isInScreenSleep(): boolean {
@@ -95,11 +101,10 @@ namespace power {
 
     export function resetPower() {
         // read default value
-        // _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
-        _timeout =  settings.readNumber("#deepsleep");//if undefined will return 0
-        _screenout = settings.readNumber("#screensleep");//if undefined will return 0
 
-        //scene.systemMenu.customMenuOptions        
+        _timeout =  settings.readNumber("#deepsleep") || 0;//if undefined will return 0
+        _screenout = settings.readNumber("#screensleep") || 0;//if undefined will return 0
+
         if (_timeout == 0) {
             _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, 1) * 1000;
             // ensure deepsleep is long enough

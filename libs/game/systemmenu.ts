@@ -153,6 +153,10 @@ namespace scene.systemMenu {
                 closeMenu();
             });
 
+            controller.C.onEvent(SYSTEM_KEY_DOWN, () => {
+                closeMenu();
+            });   
+
             controller.menu.onEvent(SYSTEM_KEY_DOWN, () => {
                 closeMenu();
             });

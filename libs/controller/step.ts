@@ -31,7 +31,7 @@ namespace controller{
             } else {
                 CURRENT_SETP += 1
             }
-            console.logValue("step", CURRENT_SETP)
+            //console.logValue("step", CURRENT_SETP)
         } else {
             TEMP_STEP = 1
         }
