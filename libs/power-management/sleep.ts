@@ -121,8 +121,11 @@ namespace sleep {
         }
 
         main() {
-            this.drawPromptText("Power Management");
-            this.drawScreenPowerText("Screen");
+            // this.drawPromptText("Power Management");
+            game.onPaint(() => {
+                //let headerFont = image.doubledFont(image.font8);
+                screen.printCenter("POWER MANAGEMENT", 2, 1, image.font8);
+            });
             this.screenDropSp = sprites.create(img`
             1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
             1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1 
@@ -141,8 +144,8 @@ namespace sleep {
             1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1 
             1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
             `, SpriteKind.Player)
-            this.screenDropSp.left = 15
-            this.screenDropSp.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - 16) / 2) + Math.floor(16 / 2) + 30; 
+            this.screenDropSp.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - 16) / 2) + Math.floor(16 / 2) + 30;
+            this.drawScreenPowerText("Screen"); 
             this.drawSleepText("Sleep");
             this.sleepDropSp = sprites.create(img`
             1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
@@ -162,7 +165,6 @@ namespace sleep {
             1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1 
             1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
             `, SpriteKind.Player)
-            this.sleepDropSp.left = 15
             this.sleepDropSp.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - 16) / 2) + Math.floor(16 / 2) + 30+8+10+16;
             this.selectDropSp = sprites.create(img`
             3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 
@@ -182,7 +184,6 @@ namespace sleep {
             3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3 
             3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 
             `, SpriteKind.Player)
-            this.selectDropSp.left = 15
             this.selectDropSp.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - 16) / 2) + Math.floor(16 / 2) + 30;
             this.screenLabel = textsprite.create(this.sleepList[this.screenSleepIndex]); 
             this.screenLabel.x = this.screenDropSp.x;
@@ -276,13 +277,13 @@ namespace sleep {
 
         private drawScreenPowerText(text:string) {
             const prompt = sprites.create(this.layoutText(text, PROMPT_WIDTH, PROMPT_HEIGHT, this.theme.colorPrompt), -1);
-            prompt.left = 15
+            prompt.left = this.screenDropSp.left
             prompt.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - prompt.height) / 2) + Math.floor(prompt.height / 2) + 15;    
         }
 
         private drawSleepText(text:string) {
             const prompt = sprites.create(this.layoutText(text, PROMPT_WIDTH, PROMPT_HEIGHT, this.theme.colorPrompt), -1);
-            prompt.left = 15
+            prompt.left = this.screenDropSp.left
             prompt.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - prompt.height) / 2) + Math.floor(prompt.height / 2) + 30+8+10;    
         }
 
@@ -296,11 +297,9 @@ namespace sleep {
             }
             switch(this.index){
                 case 0:
-                    this.selectDropSp.left = 15
                     this.selectDropSp.y = CONTENT_TOP + Math.floor((PROMPT_HEIGHT - 16) / 2) + Math.floor(16 / 2) + 30; 
                     break;
                 case 1:
-                    this.selectDropSp.left = this.sleepDropSp.left;
                     this.selectDropSp.y = this.sleepDropSp.y;
                     break;    
             }
@@ -369,6 +368,16 @@ namespace sleep {
                     //controller._setUserEventsEnabled(true);
                 }
             });
+
+            controller.C.onEvent(SYSTEM_KEY_DOWN, () => {
+                if(this.isEditing) {
+                    this.droplist.dismiss();
+                    this.isEditing = false;
+                } else {
+                    game.popScene();
+                    //controller._setUserEventsEnabled(true);
+                }
+            });
         }
     } 
 
@@ -381,8 +390,9 @@ namespace sleep {
         config.main()
     }
 
+    power.resetPower();
     scene.systemMenu.addEntry(
-        () => "Power",
+        () => "POWER MANAGEMENT",
         () => powerSystemMenu(),
         img`
     . . . . . 2 . 2 2 . 2 . . . . .

@@ -82,12 +82,25 @@ namespace power {
 
     function init() {
         if (_timeout !== undefined) return;
-        if (_screenout !== undefined ) return;
+
+        // read default value
+        _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
+        _screenout = 0;
+        // ensure deepsleep is long enough
+        const minDeepSleepTimeout = 300000;
+        if (_timeout > 0 && _timeout < minDeepSleepTimeout)
+            _timeout = minDeepSleepTimeout;
+
+    }
+
+    export function resetPower() {
         // read default value
         // _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, -1) * 1000;
-        _timeout =  settings.readNumber("#deepsleep");
-        _screenout = settings.readNumber("#screensleep");
-        if (_timeout == undefined) {
+        _timeout =  settings.readNumber("#deepsleep");//if undefined will return 0
+        _screenout = settings.readNumber("#screensleep");//if undefined will return 0
+
+        //scene.systemMenu.customMenuOptions        
+        if (_timeout == 0) {
             _timeout = control.getConfigValue(DAL.CFG_POWER_DEEPSLEEP_TIMEOUT, 1) * 1000;
             // ensure deepsleep is long enough
             const minDeepSleepTimeout = 300000;
@@ -95,7 +108,7 @@ namespace power {
                 _timeout = minDeepSleepTimeout;
             settings.writeNumber("#deepsleep", _timeout)
         }
-        if (_screenout == undefined) {
+        if (_screenout == 0) {
             _screenout = -1;
             settings.writeNumber("#screensleep", _screenout)
         }

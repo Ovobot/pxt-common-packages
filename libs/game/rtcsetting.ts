@@ -73,7 +73,7 @@ namespace scene.rtcSetting{
     //% whenUsed=true
     const INPUT_HEIGHT = INPUT_ROWS * CELL_HEIGHT;
     //% whenUsed=true
-    const INPUT_TOP = NUMPAD_TOP - INPUT_HEIGHT - NUMPAD_INPUT_MARGIN;
+    const INPUT_TOP = 40
 
     // Pixels kept blank on left and right sides of prompt
     //% whenUsed=true
@@ -206,12 +206,17 @@ namespace scene.rtcSetting{
             //let aa = game.askForNumber("", 4);
             this.draw();
             this.registerHandlers();
+            game.onShade(() => {
+                let headerFont = image.doubledFont(image.font8);
+                screen.printCenter("SET TIME", 2, 1, headerFont);
+            });
             // pause(3000)
             // scene.rtcSetting.closeSettingScene();
         }
 
         private draw() {
-            this.drawPromptText("Set Time");
+            // this.drawPromptText("Set Time");
+
             this.drawInputarea();
             this.drawSeparator();
             //this.drawEditDayofWeekArea();
@@ -629,6 +634,9 @@ namespace scene.rtcSetting{
                 scene.rtcSetting.closeSettingScene();
             });
 
+            controller.C.onEvent(SYSTEM_KEY_DOWN, () => {
+                scene.rtcSetting.closeSettingScene();
+            });
 
             this.frameCount = 0;
             this.blink = true;

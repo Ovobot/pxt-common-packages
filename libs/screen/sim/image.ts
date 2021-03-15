@@ -833,4 +833,8 @@ namespace pxsim.pxtcore {
         if (state)
             state.setScreenBrightness(b);
     }
+
+    export function setScreenSleep(sleepMode:boolean) {
+
+    }
 }

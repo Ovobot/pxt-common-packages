@@ -2,7 +2,7 @@
 /**
  * Functions to operate colored LEDs.
  */
-//% weight=100 color="#0078d7" icon="\uf00a"
+//% weight=100 color="#0078d7" icon="\uf00a" block="Xtron Light"
 namespace lightext {
     /**
      * Gets the default external light strip

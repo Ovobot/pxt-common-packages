@@ -1,5 +1,5 @@
 {
-    "name": "power-ext",
+    "name": "power-management",
     "description": "power management settings",
     "files": [
         "sleep.ts",

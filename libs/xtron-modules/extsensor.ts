@@ -222,7 +222,7 @@ namespace xtronModules {
     /**
      * TODO: 触摸按键是否接触。
      */
-    //% blockId=isTouchDown block="is touch & led %module the %index button touched?"
+    //% blockId=isTouchDown block="is touch & led %module %index button touched?"
     //% weight=65
     export function isTouchDown(module: ModuleIndex, index: TPIndex): boolean{ 
         pins.i2cWriteRegister(RGB_TOUCHKEY_ADDRESS + module, 0x00, 0x01);

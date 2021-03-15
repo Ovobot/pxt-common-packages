@@ -51,6 +51,7 @@
         "libs/rotary-encoder",
         "libs/palette",
         "libs/xtron-modules",
+        "libs/power-management",
         "libs/radio",
         "libs/radio-broadcast",
         "libs/matrix-keypad",
