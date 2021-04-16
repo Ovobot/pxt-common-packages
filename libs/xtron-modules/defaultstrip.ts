@@ -1,4 +1,4 @@
-namespace lightext {
+namespace xtronLight {
     let _defaultStrip: NeoPixelStrip;
     /**
      * Gets the default light strip

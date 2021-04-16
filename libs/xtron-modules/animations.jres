@@ -1,6 +1,6 @@
 {
   "*": {
-    "namespace": "lightext",
+    "namespace": "xtronLight",
     "dataEncoding": "base64"
   },
   "rainbowAnimation": {

@@ -2,13 +2,13 @@
 /**
  * Functions to operate colored LEDs.
  */
-//% weight=100 color="#0078d7" icon="\uf00a" block="Xtron Light"
-namespace lightext {
+//% weight=100 color="#0078d7" icon="\uf00a" 
+namespace xtronLight {
     /**
      * Gets the default external light strip
      */
     //% whenUsed
-    export const pixels = lightext.defaultStrip();
+    export const pixels = xtronLight.defaultStrip();
 
     /**
      * Set all of the pixels on the strip to one RGB color.
@@ -18,7 +18,7 @@ namespace lightext {
     //% help="light/set-all"
     //% weight=79 blockGap=8
     export function setAll(rgb: number) {
-        lightext.pixels.setAll(rgb);
+        xtronLight.pixels.setAll(rgb);
     }
 
     /**
@@ -29,7 +29,7 @@ namespace lightext {
     //% blockId="builtinlightsetgradient" block="set gradient from %startRgb=colorNumberPicker to %endRgb=colorNumberPicker"
     //% weight=78 blockGap=8 blockHidden=true
     export function setGradient(startRgb: number, endRgb: number) {
-        lightext.pixels.setGradient(startRgb, endRgb);
+        xtronLight.pixels.setGradient(startRgb, endRgb);
     }
 
     /**
@@ -40,7 +40,7 @@ namespace lightext {
     //% help="light/clear"
     //% group="More" weight=9 blockGap=8
     export function clear() {
-        lightext.pixels.clear();
+        xtronLight.pixels.clear();
     }
 
     /**
@@ -53,7 +53,7 @@ namespace lightext {
     //% help=light/graph blockGap=8
     //% weight=10
     export function graph(value: number, high?: number): void {
-        lightext.pixels.graph(value, high);
+        xtronLight.pixels.graph(value, high);
     }
 
 
@@ -66,7 +66,7 @@ namespace lightext {
     //% help="light/set-pixel-color"
     //% group="More" weight=89 blockGap=8
     export function setPixelColor(pixeloffset: number, color: number): void {
-        lightext.pixels.setPixelColor(pixeloffset, color);
+        xtronLight.pixels.setPixelColor(pixeloffset, color);
     }
 
     /**
@@ -77,7 +77,7 @@ namespace lightext {
     //% help="light/pixel-color"
     //% group="More" weight=88
     export function pixelColor(pixeloffset: number): number {
-        return lightext.pixels.pixelColor(pixeloffset);
+        return xtronLight.pixels.pixelColor(pixeloffset);
     }
 
     /**
@@ -89,7 +89,7 @@ namespace lightext {
     //% help="light/set-brightness"
     //% weight=2 blockGap=8
     export function setBrightness(brightness: number): void {
-        lightext.pixels.setBrightness(brightness);
+        xtronLight.pixels.setBrightness(brightness);
     }
 
     /**
@@ -100,7 +100,7 @@ namespace lightext {
     //% help="light/photon-forward"
     //% group="Photon" weight=41 blockGap=8
     export function photonForward(steps: number) {
-        lightext.pixels.photonForward(steps);
+        xtronLight.pixels.photonForward(steps);
     }
     /**
          * Switch the direction of the photon pulse.
@@ -110,7 +110,7 @@ namespace lightext {
     //% parts="neopixel"
     //% group="Photon" weight=40 blockGap=8
     export function photonFlip() {
-        lightext.pixels.photonFlip();
+        xtronLight.pixels.photonFlip();
     }
 
 
@@ -123,7 +123,7 @@ namespace lightext {
     //% parts="neopixel"
     //% group="Photon" weight=39 blockGap=8
     export function setPhotonPosition(index: number) {
-        lightext.pixels.setPhotonPosition(index);
+        xtronLight.pixels.setPhotonPosition(index);
     }
 
     /**
@@ -134,7 +134,7 @@ namespace lightext {
     //% help="light/set-photon-pen-hue"
     //% group="Photon" weight=39 blockGap=8
     export function setPhotonPenHue(hue: number) {
-        lightext.pixels.setPhotonPenHue(hue);
+        xtronLight.pixels.setPhotonPenHue(hue);
     }
 
     /**
@@ -145,30 +145,30 @@ namespace lightext {
     //% help="light/set-photon-mode"
     //% group="Photon" weight=38
     export function setPhotonMode(mode: PhotonMode) {
-        lightext.pixels.setPhotonMode(mode);
+        xtronLight.pixels.setPhotonMode(mode);
     }
 
     /**
      * Show an animation or queue an animation in the animation queue
-     * @param animation the animation to run, eg: lightext.rainbowAnimation
+     * @param animation the animation to run, eg: xtronLight.rainbowAnimation
      * @param duration the duration to run in milliseconds, eg: 500
      */
     //% blockId=builtin_neopixel_show_animation block="show animation %animation=light_animation_picker|for %duration=timePicker|ms"
     //% help="light/show-animation" blockGap=8
     //% weight=81
     export function showAnimation(animation: NeoPixelAnimation, duration: number) {
-        lightext.pixels.showAnimation(animation, duration);
+        xtronLight.pixels.showAnimation(animation, duration);
     }
 
     /**
       * Show a single animation frame
-      * @param animation the animation to run, eg: lightext.rainbowAnimation
+      * @param animation the animation to run, eg: xtronLight.rainbowAnimation
       */
     //% blockId=builtin_neopixel_show_animation_frame block="show frame of %animation=light_animation_picker|animation"
     //% help="light/show-animation-frame"
     //% group="More" weight=24 blockGap=8
     export function showAnimationFrame(animation: NeoPixelAnimation) {
-        lightext.pixels.showAnimationFrame(animation);
+        xtronLight.pixels.showAnimationFrame(animation);
     }
 
     /**
@@ -178,7 +178,7 @@ namespace lightext {
     //% help="light/stop-all-animations"
     //% group="More" weight=23
     export function stopAllAnimations() {
-        lightext.pixels.stopAllAnimations();
+        xtronLight.pixels.stopAllAnimations();
     }
 
     /**

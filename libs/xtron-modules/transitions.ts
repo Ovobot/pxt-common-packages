@@ -8,7 +8,7 @@ namespace easing {
     export function inOutCubic(t: number): number { return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1; }
 }
 
-namespace lightext {
+namespace xtronLight {
     export class BrightnessTransition {
         constructor() { }
         apply(strip: LightStrip, t: number, start: number, end: number): void {
